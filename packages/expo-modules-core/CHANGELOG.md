@@ -6,9 +6,19 @@
 
 ### 🎉 New features
 
+- [iOS] `Decodable` types can now be used as native function arguments. JS values are decoded through the dynamic-type registry, so arrays, dictionaries, optionals, `RawRepresentable` enums and `Convertible`s are coerced consistently. ([#45705](https://github.com/expo/expo/pull/45705) by [@tsapeta](https://github.com/tsapeta))
+
 ### 🐛 Bug fixes
 
+- [Android] Keep `ExpoComposeView` content visible during parent view transitions (e.g., `react-native-screens` pop navigation). ([#45942](https://github.com/expo/expo/pull/45942) by [@intergalacticspacehighway](https://github.com/intergalacticspacehighway))
+
 ### 💡 Others
+
+## 56.0.9 — 2026-05-15
+
+### 🎉 New features
+
+- Added single-payload overloads for `SharedObject.emit` on iOS and Android. The iOS API also accepts an already-converted `JavaScriptValue` payload to skip the native-to-JS conversion step. ([#45596](https://github.com/expo/expo/pull/45596) by [@tsapeta](https://github.com/tsapeta))
 
 ## 56.0.8 — 2026-05-13
 
@@ -28,6 +38,7 @@
 ### 💡 Others
 
 - [iOS] `AppContext.setRuntime` now takes the native React `RuntimeScheduler` pointer and a dispatch trampoline alongside the runtime pointer. ([#45636](https://github.com/expo/expo/pull/45636) by [@tsapeta](https://github.com/tsapeta))
+- Deprecated `SharedObject.emit(event:arguments:)` (iOS) and the `vararg` `emit` (Android) in favor of the new single-payload overloads. Existing single-argument call sites keep working unchanged. ([#45596](https://github.com/expo/expo/pull/45596) by [@tsapeta](https://github.com/tsapeta))
 
 ## 56.0.5 — 2026-05-08
 
