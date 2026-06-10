@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Decision Memo No. 2 — B1 Pragmatic Loader vs EAS-Native Delivery</title>
+<style>
+  :root{
+    --paper:#f2f0e9;
+    --paper-2:#e9e6da;
+    --card:#faf8f1;
+    --ink:#1d1f1a;
+    --ink-soft:#67695c;
+    --line:#d6d2c2;
+    --line-strong:#b2ad97;
+    --b1:#2e6e4e;
+    --b1-deep:#1e4f37;
+    --b1-soft:#dfece4;
+    --eas:#2547c8;
+    --eas-deep:#1c3699;
+    --eas-soft:#e2e7f9;
+    --warn:#a23b1e;
+    --warn-soft:#f6e3da;
+    --gold:#8a6d1a;
+    --disp:'Avenir Next Condensed','AvenirNextCondensed-Medium','Arial Narrow','Helvetica Neue',Helvetica,sans-serif;
+    --serif:'Charter','Iowan Old Style','Palatino Linotype',Palatino,Georgia,serif;
+    --mono:ui-monospace,'SF Mono','Cascadia Code',Menlo,Consolas,'Liberation Mono',monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--serif);
+    font-size:17px;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  body::before{
+    content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E");
+  }
+  .wrap{position:relative;z-index:1;max-width:1140px;margin:0 auto;padding:0 28px 100px}
+  ::selection{background:var(--b1-soft)}
+
+  /* ---------- masthead ---------- */
+  header.masthead{padding:50px 0 26px;border-bottom:4px double var(--line-strong)}
+  .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-soft);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  h1.title{
+    font-family:var(--disp);font-weight:600;text-transform:uppercase;
+    font-size:clamp(40px,6.4vw,76px);line-height:.98;letter-spacing:.005em;
+    margin:22px 0 14px;
+  }
+  h1 .ink-b1{color:var(--b1)} h1 .ink-eas{color:var(--eas)}
+  h1 .vs{font-family:var(--serif);font-style:italic;font-weight:400;text-transform:none;color:var(--ink-soft);font-size:.42em;vertical-align:.5em;padding:0 .3em;letter-spacing:0}
+  .subtitle{font-size:19px;font-style:italic;color:var(--ink-soft);max-width:66ch}
+  .subtitle b{color:var(--ink);font-style:normal}
+  .not-this{margin-top:18px;display:inline-block;font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--ink-soft);border:1px dashed var(--line-strong);padding:8px 14px;background:var(--card)}
+  .not-this b{color:var(--ink)}
+
+  /* ---------- sticky nav ---------- */
+  nav.toc{
+    position:sticky;top:0;z-index:40;background:rgba(242,240,233,.94);backdrop-filter:blur(4px);
+    border-bottom:1px solid var(--line-strong);margin:0 -28px;padding:0 28px;
+    display:flex;gap:2px;overflow-x:auto;
+  }
+  nav.toc a{
+    font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--ink-soft);text-decoration:none;padding:11px 11px;white-space:nowrap;border-bottom:2px solid transparent;
+  }
+  nav.toc a:hover{color:var(--ink)}
+  nav.toc a.active{color:var(--ink);border-bottom-color:var(--ink)}
+
+  /* ---------- section chrome ---------- */
+  section{margin-top:78px}
+  .sec-head{display:flex;align-items:baseline;gap:16px;border-bottom:1px solid var(--line-strong);padding-bottom:10px;margin-bottom:24px}
+  .sec-num{font-family:var(--mono);font-size:12px;letter-spacing:.18em;color:var(--ink-soft)}
+  .sec-head h2{font-family:var(--disp);font-weight:600;text-transform:uppercase;font-size:clamp(24px,3vw,34px);letter-spacing:.015em}
+  .sec-note{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--ink-soft);letter-spacing:.06em;text-align:right}
+  p.lede{max-width:74ch;margin-bottom:16px}
+  p.lede em{color:var(--ink-soft)}
+  code{font-family:var(--mono);font-size:.85em;background:var(--paper-2);padding:1px 5px;border-radius:2px}
+  .reveal{opacity:0;transform:translateY(14px);transition:opacity .6s ease,transform .6s ease}
+  .reveal.in{opacity:1;transform:none}
+
+  /* ---------- hero verdict ---------- */
+  .verdict-strip{margin-top:40px;border:1.5px solid var(--ink);background:var(--card);box-shadow:8px 8px 0 var(--paper-2)}
+  .v-top{padding:30px 34px 26px;border-bottom:1px solid var(--line)}
+  .v-label{font-family:var(--mono);font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:var(--b1-deep);margin-bottom:12px}
+  .v-sentence{font-size:clamp(21px,2.8vw,29px);line-height:1.32;font-weight:600;max-width:42ch}
+  .v-sentence .u-b1{box-shadow:inset 0 -.34em var(--b1-soft)}
+  .v-sentence .u-eas{box-shadow:inset 0 -.34em var(--eas-soft)}
+  .v-cards{display:grid;grid-template-columns:1fr 1fr}
+  .v-card{padding:22px 34px 26px}
+  .v-card+.v-card{border-left:1px solid var(--line)}
+  .v-card h3{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;margin-bottom:10px}
+  .v-card.b1 h3{color:var(--b1)} .v-card.eas h3{color:var(--eas)}
+  .v-card ul{list-style:none}
+  .v-card li{font-size:15px;padding:5px 0 5px 20px;position:relative;color:#3a3c33}
+  .v-card li::before{content:"→";position:absolute;left:0;font-family:var(--mono);font-size:12px;top:8px}
+  .v-card.b1 li::before{color:var(--b1)} .v-card.eas li::before{color:var(--eas)}
+
+  /* ---------- diagrams ---------- */
+  .diagram-frame{border:1px solid var(--line-strong);background:var(--card);padding:18px 14px 8px;overflow-x:auto}
+  .diag{width:100%;height:auto;display:block;min-width:760px}
+  .diag text{font-family:var(--mono)}
+  .legend{display:flex;gap:20px;flex-wrap:wrap;font-family:var(--mono);font-size:11px;color:var(--ink-soft);margin:14px 2px 0;align-items:center}
+  .legend .sw{display:inline-block;width:24px;height:13px;vertical-align:-2px;margin-right:7px;border:1.4px solid var(--ink);background:var(--card)}
+  .legend .sw.b1{border-color:var(--b1);background:var(--b1-soft)}
+  .legend .sw.eas{border-color:var(--eas);background:var(--eas-soft)}
+  .legend .sw.shared{border-color:var(--ink);background:#efeadb}
+
+  /* ---------- repo topology section ---------- */
+  .hesitation-quote{
+    border-left:4px solid var(--gold);background:var(--card);
+    padding:18px 24px;margin:6px 0 26px;font-size:19px;font-style:italic;max-width:66ch;
+  }
+  .hesitation-quote .who{display:block;margin-top:8px;font-family:var(--mono);font-size:10.5px;font-style:normal;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
+  .spec-callout{
+    border:1px solid var(--line-strong);background:#efeadb;padding:16px 22px;margin-bottom:30px;max-width:78ch;font-size:15.5px;
+  }
+  .spec-callout b{font-family:var(--mono);font-size:.82em;letter-spacing:.06em}
+  .topo-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+  .topo{border:1px solid var(--line-strong);background:var(--card);display:flex;flex-direction:column}
+  .topo-head{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line)}
+  .topo-letter{
+    font-family:var(--disp);font-weight:600;font-size:22px;width:38px;height:38px;flex:none;
+    display:flex;align-items:center;justify-content:center;border:1.5px solid var(--ink);background:var(--paper-2);
+  }
+  .topo-head h3{font-size:16.5px;font-weight:700;line-height:1.25}
+  .topo-head .tags{margin-left:auto;display:flex;gap:6px;flex:none}
+  .tag{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;padding:3px 7px;border:1px solid currentColor}
+  .tag.b1{color:var(--b1)} .tag.eas{color:var(--eas)} .tag.both{color:var(--ink-soft)}
+  .topo svg{width:100%;height:auto;display:block;background:#f6f4ec;border-bottom:1px solid var(--line)}
+  .topo svg text{font-family:var(--mono)}
+  .topo-body{padding:14px 18px 16px;font-size:14.5px;flex:1;display:flex;flex-direction:column}
+  .topo-body ul{list-style:none;margin-bottom:12px}
+  .topo-body li{padding:3px 0 3px 18px;position:relative;color:#3a3c33}
+  .topo-body li.plus::before{content:"+";position:absolute;left:2px;color:var(--b1);font-family:var(--mono);font-weight:700}
+  .topo-body li.minus::before{content:"–";position:absolute;left:2px;color:var(--warn);font-family:var(--mono);font-weight:700}
+  .grade-row{margin-top:auto;display:flex;gap:10px;align-items:center;border-top:1px dashed var(--line);padding-top:10px}
+  .grade{
+    font-family:var(--disp);font-weight:600;font-size:21px;line-height:1;
+    padding:6px 10px;border:1.5px solid var(--ink);background:var(--paper-2);
+  }
+  .grade.good{background:var(--b1-soft);border-color:var(--b1-deep);color:var(--b1-deep)}
+  .grade.ok{background:#f0ead2;border-color:var(--gold);color:var(--gold)}
+  .grade.bad{background:var(--warn-soft);border-color:var(--warn);color:var(--warn)}
+  .grade-row .gr-note{font-family:var(--mono);font-size:11px;color:var(--ink-soft);letter-spacing:.04em}
+  .topo.pick{outline:3px solid var(--b1);outline-offset:2px;position:relative}
+  .topo.pick::after{
+    content:"RECOMMENDED";position:absolute;top:-12px;right:14px;background:var(--b1);color:#fff;
+    font-family:var(--mono);font-size:9.5px;letter-spacing:.18em;padding:4px 10px;
+  }
+  .topo-conclusion{
+    margin-top:30px;border:1.5px solid var(--ink);background:var(--card);box-shadow:8px 8px 0 var(--paper-2);
+    padding:26px 32px;
+  }
+  .topo-conclusion h3{font-family:var(--disp);font-weight:600;text-transform:uppercase;font-size:22px;letter-spacing:.02em;margin-bottom:12px}
+  .topo-conclusion p{max-width:78ch;margin-bottom:12px;font-size:15.5px}
+  .topo-conclusion ul{list-style:none;max-width:78ch}
+  .topo-conclusion li{font-size:15px;padding:5px 0 5px 22px;position:relative}
+  .topo-conclusion li::before{content:"✓";position:absolute;left:0;color:var(--b1);font-family:var(--mono);font-weight:700}
+
+  /* ---------- scorecard ---------- */
+  .score-legend{display:flex;gap:24px;font-family:var(--mono);font-size:11px;color:var(--ink-soft);margin-bottom:18px;flex-wrap:wrap}
+  .score-legend .chip{display:inline-flex;align-items:center;gap:7px}
+  .score-legend .bar-demo{width:30px;height:9px}
+  .bar-demo.b1{background:var(--b1)} .bar-demo.eas{background:var(--eas)}
+  table.scorecard{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line-strong)}
+  .scorecard th{
+    font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);
+    text-align:left;padding:12px 14px;border-bottom:1.5px solid var(--ink);font-weight:500;
+  }
+  .scorecard td{padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:middle;font-size:14.5px}
+  .scorecard tr:last-child td{border-bottom:none}
+  .scorecard tr:hover td{background:#f3f0e4}
+  .dim-name{font-weight:700;font-size:15px}
+  .dim-sub{display:block;font-family:var(--mono);font-size:10.5px;color:var(--ink-soft);letter-spacing:.03em;margin-top:3px;font-weight:400}
+  .bars{min-width:210px}
+  .bar-row{display:flex;align-items:center;gap:8px;margin:3px 0}
+  .bar-row .bl{font-family:var(--mono);font-size:9.5px;width:24px;color:var(--ink-soft);letter-spacing:.06em}
+  .bar-track{flex:1;height:9px;background:var(--paper-2);position:relative}
+  .bar-fill{height:100%;width:0;transition:width .9s cubic-bezier(.22,.8,.3,1)}
+  .bar-fill.b1{background:var(--b1)} .bar-fill.eas{background:var(--eas)}
+  td.who{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap}
+  td.who .w-b1{color:var(--b1);font-weight:700} td.who .w-eas{color:var(--eas);font-weight:700} td.who .w-tie{color:var(--ink-soft)}
+  .score-tally{margin-top:16px;font-family:var(--mono);font-size:12px;letter-spacing:.05em;color:var(--ink-soft);max-width:80ch;line-height:1.7}
+  .score-tally b.b1{color:var(--b1)} .score-tally b.eas{color:var(--eas)}
+
+  /* ---------- deal-breakers ---------- */
+  .db-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+  .db-col h3{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;margin-bottom:14px;padding-bottom:8px;border-bottom:1.5px solid currentColor}
+  .db-col.b1 h3{color:var(--b1)} .db-col.eas h3{color:var(--eas)}
+  .db{border:1px solid var(--line-strong);border-left:4px solid var(--warn);background:var(--card);padding:14px 18px;margin-bottom:14px}
+  .db h4{font-size:15.5px;margin-bottom:5px}
+  .db p{font-size:14px;color:#3a3c33}
+  .db .sev{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--warn);display:block;margin-bottom:6px}
+
+  /* ---------- hybrid ---------- */
+  .swap-cost{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:24px}
+  .swap-card{border:1px solid var(--line-strong);background:var(--card);padding:18px 22px}
+  .swap-card h4{font-family:var(--mono);font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:10px}
+  .swap-card.toeas h4{color:var(--eas)} .swap-card.tob1 h4{color:var(--b1)}
+  .swap-card ul{list-style:none}
+  .swap-card li{font-size:14.5px;padding:4px 0 4px 18px;position:relative;color:#3a3c33}
+  .swap-card li::before{content:"·";position:absolute;left:4px;font-weight:700}
+  .swap-card li b{font-family:var(--mono);font-size:.85em}
+
+  /* ---------- final verdict ---------- */
+  .final{border:2px solid var(--ink);background:var(--card);box-shadow:10px 10px 0 var(--paper-2);padding:34px 38px}
+  .final .v-label{color:var(--ink)}
+  .final h3{font-family:var(--disp);font-weight:600;text-transform:uppercase;font-size:clamp(24px,3vw,34px);line-height:1.1;margin-bottom:16px}
+  .final h3 .ink-b1{color:var(--b1)}
+  .final p{max-width:78ch;margin-bottom:14px;font-size:16px}
+  .final ol{max-width:78ch;margin-left:22px}
+  .final ol li{margin:7px 0;font-size:15.5px}
+  .final .sig{margin-top:22px;font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
+
+  footer{margin-top:80px;border-top:3px double var(--line-strong);padding-top:18px;font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
+
+  @media (max-width:880px){
+    .v-cards,.topo-grid,.db-grid,.swap-cost{grid-template-columns:1fr}
+    .v-card+.v-card{border-left:none;border-top:1px solid var(--line)}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- ================= MASTHEAD ================= -->
+<header class="masthead">
+  <div class="kicker">
+    <span>Decision Memo · No. 2 — Delivery Backbone</span>
+    <span>Remote-Module Framework · Expo Host · 2026</span>
+  </div>
+  <h1 class="title"><span class="ink-b1">B1 Pragmatic Loader</span><span class="vs">versus</span><span class="ink-eas">EAS-Native Delivery</span></h1>
+  <p class="subtitle"><b>Same runtime, different backbone.</b> Both proposals run plain-JS modules in the shared Hermes runtime behind a scoped SDK, error boundaries, and a kill-switch. They differ only in the <b>delivery backbone</b> — who stores, signs, gates, and ships the bytes — and in who you become: a loader author, or a fork maintainer.</p>
+  <span class="not-this">This is <b>not</b> Memo No. 1 (EAS vs Re.Pack) again — that settled <i>which existing machinery to bend</i>. This memo asks: <b>bend it at all, or build a 500-line backbone you fully own?</b></span>
+</header>
+
+<nav class="toc" id="toc">
+  <a href="#verdict">01 Verdict</a>
+  <a href="#backbone">02 Backbone</a>
+  <a href="#repo">03 The Repo Question</a>
+  <a href="#scorecard">04 Scorecard</a>
+  <a href="#dealbreakers">05 Deal-Breakers</a>
+  <a href="#swap">06 Swap Path</a>
+  <a href="#flow">07 Flowchart</a>
+  <a href="#final">08 Final Verdict</a>
+</nav>
+
+<!-- ================= 01 VERDICT STRIP ================= -->
+<section id="verdict">
+  <div class="verdict-strip reveal">
+    <div class="v-top">
+      <div class="v-label">The one-sentence answer</div>
+      <p class="v-sentence">Start on <span class="u-b1">B1's thin custom backbone</span> to ship the first module in ~3 weeks with zero forks to maintain — and keep <span class="u-eas">the EAS sidecar</span> as the engineered transport swap for when rollout, caching, and cadence pressure actually arrive.</p>
+    </div>
+    <div class="v-cards">
+      <div class="v-card b1">
+        <h3>Pick B1 when…</h3>
+        <ul>
+          <li>One owner + AI agents; first module must ship in <b>weeks</b>, not a quarter</li>
+          <li>You refuse to track a fork of <code>expo-updates</code> through every Expo SDK release</li>
+          <li>Per-channel targeting is enough for v1 — no staged % rollout yet</li>
+          <li>You want every part boring &amp; replaceable: R2, Actions, ed25519, esbuild</li>
+        </ul>
+      </div>
+      <div class="v-card eas">
+        <h3>Pick EAS when…</h3>
+        <ul>
+          <li>Staged <code>--rollout-percentage</code>, republish-rollback &amp; a dashboard must exist on day one</li>
+          <li>You'd rather adapt battle-tested download/cache/signing than hand-roll it</li>
+          <li>Mechanical <code>runtimeVersion</code> gating beats trusting your own semver check</li>
+          <li>Two engineers and 8–12 weeks are acceptable for production-grade delivery</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 02 BACKBONE DIAGRAM ================= -->
+<section id="backbone">
+  <div class="sec-head"><span class="sec-num">02</span><h2>Same Runtime, Different Backbone</h2><span class="sec-note">spine identical · branches differ</span></div>
+  <p class="lede">The runtime spine below — <em>fetch → verify → evaluate → mount → error boundary</em> — is drawn <b>once</b> because both proposals implement it identically: plain-JS bundle, host singletons via externals, scoped SDK at <code>register()</code>, circuit breaker, remote kill flag. Everything that differs lives in the two colored branches that feed it.</p>
+  <div class="diagram-frame reveal">
+    <svg class="diag" viewBox="0 0 1080 560" role="img" aria-label="Shared runtime spine with B1 and EAS delivery backbones">
+      <defs>
+        <marker id="arr" markerWidth="9" markerHeight="8" refX="7" refY="4" orient="auto">
+          <path d="M0,0 L8,4 L0,8 z" fill="#1d1f1a"/>
+        </marker>
+        <marker id="arrG" markerWidth="9" markerHeight="8" refX="7" refY="4" orient="auto">
+          <path d="M0,0 L8,4 L0,8 z" fill="#2e6e4e"/>
+        </marker>
+        <marker id="arrB" markerWidth="9" markerHeight="8" refX="7" refY="4" orient="auto">
+          <path d="M0,0 L8,4 L0,8 z" fill="#2547c8"/>
+        </marker>
+      </defs>
+
+      <!-- B1 backbone (left) -->
+      <text x="240" y="30" text-anchor="middle" font-size="12" font-weight="700" letter-spacing="2" fill="#1e4f37">B1 BACKBONE — OWN IT</text>
+      <rect x="80" y="44" width="320" height="54" fill="#dfece4" stroke="#2e6e4e" stroke-width="1.5"/>
+      <text x="240" y="66" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d1f1a">modules monorepo (git)</text>
+      <text x="240" y="84" text-anchor="middle" font-size="9.5" fill="#67695c">source + registry/channels/*.json · promote = PR merge</text>
+      <line x1="240" y1="98" x2="240" y2="118" stroke="#2e6e4e" stroke-width="1.4" marker-end="url(#arrG)"/>
+      <rect x="80" y="122" width="320" height="54" fill="#dfece4" stroke="#2e6e4e" stroke-width="1.5"/>
+      <text x="240" y="144" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d1f1a">GitHub Actions publish</text>
+      <text x="240" y="162" text-anchor="middle" font-size="9.5" fill="#67695c">esbuild → sign ed25519 → sync manifest</text>
+      <line x1="240" y1="176" x2="240" y2="196" stroke="#2e6e4e" stroke-width="1.4" marker-end="url(#arrG)"/>
+      <rect x="80" y="200" width="320" height="54" fill="#dfece4" stroke="#2e6e4e" stroke-width="1.5"/>
+      <text x="240" y="222" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d1f1a">Cloudflare R2 + CDN</text>
+      <text x="240" y="240" text-anchor="middle" font-size="9.5" fill="#67695c">static JSON + content-addressed artifacts · no servers</text>
+
+      <!-- EAS backbone (right) -->
+      <text x="840" y="30" text-anchor="middle" font-size="12" font-weight="700" letter-spacing="2" fill="#1c3699">EAS BACKBONE — ADAPT IT</text>
+      <rect x="680" y="44" width="320" height="54" fill="#e2e7f9" stroke="#2547c8" stroke-width="1.5"/>
+      <text x="840" y="66" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d1f1a">EAS branches as registry</text>
+      <text x="840" y="84" text-anchor="middle" font-size="9.5" fill="#67695c">module/&lt;id&gt;/&lt;channel&gt; · eas update / republish</text>
+      <line x1="840" y1="98" x2="840" y2="118" stroke="#2547c8" stroke-width="1.4" marker-end="url(#arrB)"/>
+      <rect x="680" y="122" width="320" height="54" fill="#e2e7f9" stroke="#2547c8" stroke-width="1.5"/>
+      <text x="840" y="144" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d1f1a">EAS Update CDN (u.expo.dev)</text>
+      <text x="840" y="162" text-anchor="middle" font-size="9.5" fill="#67695c">open protocol · + ~200-LOC composition Worker</text>
+      <line x1="840" y1="176" x2="840" y2="196" stroke="#2547c8" stroke-width="1.4" marker-end="url(#arrB)"/>
+      <rect x="680" y="200" width="320" height="54" fill="#e2e7f9" stroke="#2547c8" stroke-width="1.5"/>
+      <text x="840" y="222" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d1f1a">expo-updates sidecar fork</text>
+      <text x="840" y="240" text-anchor="middle" font-size="9.5" fill="#67695c">FileDownloader · SQLite cache · SelectionPolicy</text>
+
+      <!-- convergence -->
+      <path d="M 240 254 L 240 290 L 500 318" fill="none" stroke="#2e6e4e" stroke-width="1.6" marker-end="url(#arrG)"/>
+      <path d="M 840 254 L 840 290 L 580 318" fill="none" stroke="#2547c8" stroke-width="1.6" marker-end="url(#arrB)"/>
+      <text x="318" y="284" font-size="9.5" fill="#1e4f37">custom loader · ~500 LOC TypeScript</text>
+      <text x="612" y="284" font-size="9.5" fill="#1c3699">loadModuleAsync(id, channel) · native facade</text>
+
+      <rect x="430" y="312" width="220" height="40" rx="20" fill="#efeadb" stroke="#1d1f1a" stroke-width="1.6"/>
+      <text x="540" y="336" text-anchor="middle" font-size="11" font-weight="700" fill="#1d1f1a">host loader API — one seam</text>
+      <line x1="540" y1="352" x2="540" y2="376" stroke="#1d1f1a" stroke-width="1.6" marker-end="url(#arr)"/>
+
+      <!-- shared spine -->
+      <text x="540" y="372" text-anchor="middle" font-size="0" fill="none">.</text>
+      <rect x="34" y="382" width="1012" height="84" fill="none" stroke="#1d1f1a" stroke-width="1.6" stroke-dasharray="none"/>
+      <text x="540" y="376" text-anchor="middle" font-size="11" font-weight="700" letter-spacing="3" fill="#1d1f1a">SHARED RUNTIME SPINE — IDENTICAL IN BOTH PROPOSALS</text>
+
+      <g>
+        <rect x="50" y="396" width="176" height="56" fill="#efeadb" stroke="#1d1f1a" stroke-width="1.4"/>
+        <text x="138" y="419" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d1f1a">FETCH</text>
+        <text x="138" y="437" text-anchor="middle" font-size="9" fill="#67695c">manifest + artifact, lazy</text>
+        <line x1="226" y1="424" x2="250" y2="424" stroke="#1d1f1a" stroke-width="1.4" marker-end="url(#arr)"/>
+
+        <rect x="254" y="396" width="176" height="56" fill="#efeadb" stroke="#1d1f1a" stroke-width="1.4"/>
+        <text x="342" y="419" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d1f1a">VERIFY</text>
+        <text x="342" y="437" text-anchor="middle" font-size="9" fill="#67695c">sha-256 + signature</text>
+        <line x1="430" y1="424" x2="454" y2="424" stroke="#1d1f1a" stroke-width="1.4" marker-end="url(#arr)"/>
+
+        <rect x="458" y="396" width="176" height="56" fill="#efeadb" stroke="#1d1f1a" stroke-width="1.4"/>
+        <text x="546" y="419" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d1f1a">EVALUATE</text>
+        <text x="546" y="437" text-anchor="middle" font-size="9" fill="#67695c">plain JS in shared Hermes</text>
+        <line x1="634" y1="424" x2="658" y2="424" stroke="#1d1f1a" stroke-width="1.4" marker-end="url(#arr)"/>
+
+        <rect x="662" y="396" width="176" height="56" fill="#efeadb" stroke="#1d1f1a" stroke-width="1.4"/>
+        <text x="750" y="419" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d1f1a">MOUNT</text>
+        <text x="750" y="437" text-anchor="middle" font-size="9" fill="#67695c">route/slot + scoped SDK</text>
+        <line x1="838" y1="424" x2="862" y2="424" stroke="#1d1f1a" stroke-width="1.4" marker-end="url(#arr)"/>
+
+        <rect x="866" y="396" width="176" height="56" fill="#efeadb" stroke="#1d1f1a" stroke-width="1.4"/>
+        <text x="954" y="419" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d1f1a">BOUNDARY</text>
+        <text x="954" y="437" text-anchor="middle" font-size="9" fill="#67695c">breaker · kill · rollback</text>
+      </g>
+
+      <!-- per-node flavor footnotes -->
+      <g font-size="9">
+        <circle cx="58" cy="486" r="4" fill="#2e6e4e"/>
+        <text x="70" y="489" fill="#1e4f37">plain GET · hand-rolled file cache</text>
+        <circle cx="58" cy="506" r="4" fill="#2547c8"/>
+        <text x="70" y="509" fill="#1c3699">sidecar fork · SQLite cache · runtimeVersion gate pre-download</text>
+
+        <circle cx="262" cy="486" r="4" fill="#2e6e4e"/>
+        <text x="274" y="489" fill="#1e4f37">ed25519, pinned pubkey · manifest unsigned in MVP</text>
+        <circle cx="262" cy="506" r="4" fill="#2547c8"/>
+        <text x="274" y="509" fill="#1c3699">RSA cert-chain (expo-signature) · signed manifest</text>
+
+        <circle cx="700" cy="486" r="4" fill="#2e6e4e"/>
+        <text x="712" y="489" fill="#1e4f37">kill flag lives in channel manifest (R2)</text>
+        <circle cx="700" cy="506" r="4" fill="#2547c8"/>
+        <text x="712" y="509" fill="#1c3699">kill flag lives in composition Worker</text>
+
+        <text x="546" y="492" text-anchor="middle" font-size="9" fill="#67695c">EVALUATE + MOUNT:</text>
+        <text x="546" y="506" text-anchor="middle" font-size="9" fill="#67695c">byte-for-byte the same idea — both eval plain JS, both gate on semver/SDK version</text>
+      </g>
+    </svg>
+    <div class="legend">
+      <span><span class="sw b1"></span>B1 — custom, ~900 LOC you write</span>
+      <span><span class="sw eas"></span>EAS — adapted, fork you maintain</span>
+      <span><span class="sw shared"></span>Shared — identical contract in both</span>
+    </div>
+  </div>
+  <p class="lede" style="margin-top:18px">Because the spine is shared, <em>the module contract — manifest, capabilities, mounts, <code>register(scopedSdk)</code>, signed artifact — is the durable interface.</em> The backbone is a transport. That single fact powers both the repo answer (§03) and the swap path (§06).</p>
+</section>
+
+<!-- ================= 03 THE REPO QUESTION ================= -->
+<section id="repo">
+  <div class="sec-head"><span class="sec-num">03</span><h2>The Repo Question</h2><span class="sec-note">the stated hesitation · answered head-on</span></div>
+
+  <div class="hesitation-quote reveal">
+    "I am hesitant of using a new GitHub repo for each module."
+    <span class="who">— Owner, stated constraint for this memo</span>
+  </div>
+
+  <div class="spec-callout reveal">
+    <b>WHAT THE SPEC ACTUALLY REQUIRES (D5 / S1–S2):</b> agents work in an <i>isolated workspace</i> — "its own repository <b>or an isolated package with mechanically enforced boundaries</b>" — and have <b>no write access to the host/core repo</b>. <i>Repo-per-module was one mechanical realization B1's draft happened to sketch, not a requirement.</i> Any topology that keeps agents out of the host repo and routes publishes through the pipeline satisfies the spec.
+  </div>
+
+  <p class="lede">Four realistic topologies, graded. Containment grade = how well it enforces "agent cannot touch host / cannot self-publish". Ergonomics grade = what it feels like to operate solo at 10–50 modules.</p>
+
+  <div class="topo-grid">
+
+    <!-- (a) repo per module -->
+    <div class="topo reveal">
+      <div class="topo-head">
+        <span class="topo-letter">A</span>
+        <h3>Repo-per-module<br><span style="font-weight:400;font-size:12.5px;color:var(--ink-soft)">what B1's draft assumed</span></h3>
+        <span class="tags"><span class="tag b1">B1 draft</span></span>
+      </div>
+      <svg viewBox="0 0 320 170" role="img" aria-label="Repo per module topology">
+        <g font-size="8.5">
+          <rect x="14" y="22" width="56" height="34" fill="#dfece4" stroke="#2e6e4e"/>
+          <text x="42" y="42" text-anchor="middle" fill="#1d1f1a">mod-pets</text>
+          <rect x="80" y="22" width="56" height="34" fill="#dfece4" stroke="#2e6e4e"/>
+          <text x="108" y="42" text-anchor="middle" fill="#1d1f1a">mod-chat</text>
+          <rect x="146" y="22" width="56" height="34" fill="#dfece4" stroke="#2e6e4e"/>
+          <text x="174" y="42" text-anchor="middle" fill="#1d1f1a">mod-shop</text>
+          <text x="232" y="44" font-size="13" fill="#67695c">⋯ ×N</text>
+          <text x="42" y="14" text-anchor="middle" fill="#67695c">CI ①</text>
+          <text x="108" y="14" text-anchor="middle" fill="#67695c">CI ②</text>
+          <text x="174" y="14" text-anchor="middle" fill="#67695c">CI ③</text>
+          <line x1="42" y1="56" x2="120" y2="104" stroke="#67695c" stroke-width="1"/>
+          <line x1="108" y1="56" x2="140" y2="104" stroke="#67695c" stroke-width="1"/>
+          <line x1="174" y1="56" x2="160" y2="104" stroke="#67695c" stroke-width="1"/>
+          <rect x="80" y="106" width="150" height="30" fill="#efeadb" stroke="#1d1f1a"/>
+          <text x="155" y="125" text-anchor="middle" fill="#1d1f1a">registry repo / R2</text>
+          <text x="160" y="158" text-anchor="middle" fill="#a23b1e" font-size="9">N webhooks · N secrets · N CI configs · N template drifts</text>
+        </g>
+      </svg>
+      <div class="topo-body">
+        <ul>
+          <li class="plus">Maximum isolation; GitHub-native access control per agent — nothing to engineer</li>
+          <li class="plus">Template repo scaffolding works out of the box</li>
+          <li class="minus">Repo sprawl: at modules/day cadence you mint repos faster than you archive them</li>
+          <li class="minus">N webhook/CI/secrets configs to keep in sync; SDK-types bump = N dependabot PRs</li>
+          <li class="minus">Discovery pain: "where is the manifest for X?" spans N repos</li>
+        </ul>
+        <div class="grade-row"><span class="grade bad">B−</span><span class="gr-note">containment A+ · ergonomics D at scale — the hesitation is justified</span></div>
+      </div>
+    </div>
+
+    <!-- (b) monorepo -->
+    <div class="topo pick reveal">
+      <div class="topo-head">
+        <span class="topo-letter">B</span>
+        <h3>One modules monorepo<br><span style="font-weight:400;font-size:12.5px;color:var(--ink-soft)">dir per module · agents in worktrees/branches</span></h3>
+        <span class="tags"><span class="tag both">both</span></span>
+      </div>
+      <svg viewBox="0 0 320 170" role="img" aria-label="Modules monorepo topology">
+        <g font-size="8.5">
+          <rect x="12" y="14" width="170" height="128" fill="#dfece4" stroke="#2e6e4e" stroke-width="1.5"/>
+          <text x="97" y="30" text-anchor="middle" font-weight="700" fill="#1d1f1a">modules monorepo</text>
+          <rect x="24" y="40" width="146" height="18" fill="#faf8f1" stroke="#b2ad97"/>
+          <text x="30" y="52" fill="#1d1f1a">modules/pets/ · chat/ · shop/ …</text>
+          <rect x="24" y="62" width="146" height="18" fill="#faf8f1" stroke="#b2ad97"/>
+          <text x="30" y="74" fill="#1d1f1a">registry/channels/*.json (B1)</text>
+          <rect x="24" y="84" width="146" height="18" fill="#faf8f1" stroke="#b2ad97"/>
+          <text x="30" y="96" fill="#1d1f1a">CODEOWNERS · branch protection</text>
+          <text x="30" y="120" fill="#67695c">agent worktrees:</text>
+          <text x="30" y="132" fill="#2e6e4e">agent/pets-v1.2  agent/chat-fix</text>
+          <line x1="182" y1="78" x2="212" y2="78" stroke="#1d1f1a" stroke-width="1.2"/>
+          <rect x="214" y="56" width="94" height="44" fill="#efeadb" stroke="#1d1f1a"/>
+          <text x="261" y="72" text-anchor="middle" fill="#1d1f1a">PR → path checks</text>
+          <text x="261" y="86" text-anchor="middle" fill="#1d1f1a">→ bot merges</text>
+          <line x1="261" y1="100" x2="261" y2="120" stroke="#1d1f1a" stroke-width="1.2"/>
+          <text x="261" y="136" text-anchor="middle" fill="#1d1f1a">publish (CI only)</text>
+          <text x="160" y="160" text-anchor="middle" fill="#1e4f37" font-size="9">one repo · one CI · one place to look · agents never see main</text>
+        </g>
+      </svg>
+      <div class="topo-body">
+        <ul>
+          <li class="plus">One CI config, one secrets store, one SDK-types bump, one discovery surface</li>
+          <li class="plus">Agents work in worktrees/branches; merge only via PR + required path checks</li>
+          <li class="plus">B1's promotion PR survives intact as a <b>directory-scoped PR</b> touching <code>registry/</code></li>
+          <li class="minus"><b>Honest caveat:</b> GitHub has <b>no per-directory write permission</b> — isolation here is branch protection + CODEOWNERS + CI path checks + <i>only the pipeline bot can merge/publish</i></li>
+        </ul>
+        <div class="grade-row"><span class="grade good">A</span><span class="gr-note">containment B+ (process-enforced) · ergonomics A — spec-compliant: agent never had host-repo access anyway</span></div>
+      </div>
+    </div>
+
+    <!-- (c) branch per module -->
+    <div class="topo reveal">
+      <div class="topo-head">
+        <span class="topo-letter">C</span>
+        <h3>Branch-per-module, one repo<br><span style="font-weight:400;font-size:12.5px;color:var(--ink-soft)">the EAS approach's "natural" shape</span></h3>
+        <span class="tags"><span class="tag eas">EAS-ish</span></span>
+      </div>
+      <svg viewBox="0 0 320 170" role="img" aria-label="Branch per module topology">
+        <g font-size="8.5">
+          <rect x="12" y="60" width="92" height="40" fill="#e2e7f9" stroke="#2547c8" stroke-width="1.5"/>
+          <text x="58" y="78" text-anchor="middle" font-weight="700" fill="#1d1f1a">one repo</text>
+          <text x="58" y="92" text-anchor="middle" fill="#67695c">main</text>
+          <path d="M 104 70 C 140 40, 170 36, 206 36" fill="none" stroke="#2547c8" stroke-width="1.3"/>
+          <path d="M 104 80 C 140 76, 170 74, 206 74" fill="none" stroke="#2547c8" stroke-width="1.3"/>
+          <path d="M 104 90 C 140 116, 170 120, 206 120" fill="none" stroke="#2547c8" stroke-width="1.3"/>
+          <text x="210" y="39" fill="#1c3699">module/pets/prod</text>
+          <text x="210" y="77" fill="#1c3699">module/chat/staging</text>
+          <text x="210" y="123" fill="#1c3699">module/shop/dev</text>
+          <text x="160" y="152" text-anchor="middle" fill="#a23b1e" font-size="9">long-lived divergent branches ≠ code review topology</text>
+        </g>
+      </svg>
+      <div class="topo-body">
+        <ul>
+          <li class="plus">Maps 1:1 onto EAS branches (<code>module/&lt;id&gt;/&lt;channel&gt;</code>) — zero mapping logic</li>
+          <li class="minus">Git branches as a <i>source</i> topology means permanently divergent histories — no shared tooling upgrades, awful diffs/review</li>
+          <li class="minus"><b>Unnecessary:</b> EAS branches are <i>publish-time targets</i>; <code>eas update --branch …</code> runs fine from a monorepo directory. Source branches ≠ EAS branches</li>
+        </ul>
+        <div class="grade-row"><span class="grade ok">C+</span><span class="gr-note">fine as a publish namespace · poor as a source-of-truth layout</span></div>
+      </div>
+    </div>
+
+    <!-- (d) no git registry -->
+    <div class="topo reveal">
+      <div class="topo-head">
+        <span class="topo-letter">D</span>
+        <h3>No-git registry<br><span style="font-weight:400;font-size:12.5px;color:var(--ink-soft)">B1 variant: modctl → R2 direct; git only for source</span></h3>
+        <span class="tags"><span class="tag b1">B1 variant</span></span>
+      </div>
+      <svg viewBox="0 0 320 170" role="img" aria-label="No git registry topology">
+        <g font-size="8.5">
+          <rect x="12" y="44" width="110" height="62" fill="#dfece4" stroke="#2e6e4e" stroke-width="1.5"/>
+          <text x="67" y="64" text-anchor="middle" font-weight="700" fill="#1d1f1a">source monorepo</text>
+          <text x="67" y="80" text-anchor="middle" fill="#67695c">modules/* only —</text>
+          <text x="67" y="93" text-anchor="middle" fill="#67695c">no registry/ dir</text>
+          <line x1="122" y1="75" x2="196" y2="75" stroke="#2e6e4e" stroke-width="1.4"/>
+          <text x="159" y="66" text-anchor="middle" fill="#1e4f37">modctl publish</text>
+          <text x="159" y="90" text-anchor="middle" fill="#1e4f37">(signed, CI-only)</text>
+          <ellipse cx="246" cy="52" rx="44" ry="10" fill="#efeadb" stroke="#1d1f1a"/>
+          <rect x="202" y="52" width="88" height="44" fill="#efeadb" stroke="#1d1f1a"/>
+          <ellipse cx="246" cy="96" rx="44" ry="10" fill="#efeadb" stroke="#1d1f1a"/>
+          <rect x="203.5" y="53" width="85" height="42" fill="#efeadb" stroke="none"/>
+          <text x="246" y="72" text-anchor="middle" fill="#1d1f1a">R2 bucket</text>
+          <text x="246" y="86" text-anchor="middle" fill="#67695c">manifests + artifacts</text>
+          <text x="160" y="132" text-anchor="middle" fill="#67695c" font-size="9">promote = CLI / workflow_dispatch button — no PR-merge gate</text>
+          <text x="160" y="150" text-anchor="middle" fill="#a23b1e" font-size="9">loses git audit/review UI for registry state; rebuild as audit log later</text>
+        </g>
+      </svg>
+      <div class="topo-body">
+        <ul>
+          <li class="plus">Simplest possible registry: zero registry repo, zero sync job; R2 is the only truth</li>
+          <li class="plus">Still spec-legal: "one-click promote" can be a <code>workflow_dispatch</code> button</li>
+          <li class="minus">Loses what made B1's git-as-registry charming: free audit log, diff-able promote review, rollback history in <code>git log</code></li>
+        </ul>
+        <div class="grade-row"><span class="grade ok">B</span><span class="gr-note">good fallback · but topology B gives the same simplicity and keeps the audit trail</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="topo-conclusion reveal">
+    <h3>Conclusion: hesitation justified — one monorepo, bot-mediated publish</h3>
+    <p>The repo-per-module hesitation is <b>correct</b>: it buys containment the spec never asked for (the requirement is no write access to the <i>host</i> repo — D5/S2) and pays for it in sprawl, N CI configs, and discovery pain at exactly the cadence you're designing for. <b>Both approaches work fine with one <code>modules</code> monorepo</b>:</p>
+    <ul>
+      <li><b>Layout:</b> <code>modules/&lt;id&gt;/</code> one directory per module · <code>registry/channels/*.json</code> (B1 only) · template as a directory generator, not a repo template.</li>
+      <li><b>Containment:</b> agents work in worktrees/branches with no merge rights; branch protection + CODEOWNERS + required CI path checks ("this PR touches only <code>modules/pets/</code>"); only the pipeline bot merges and only CI holds publish credentials. GitHub can't scope <i>writes</i> per directory — so enforcement is PR review + checks + bot-merge, which is acceptable: the agent never had host-repo access in any topology.</li>
+      <li><b>B1 loses nothing material</b> by folding the registry repo into the monorepo: promotion PRs still work as <b>directory-scoped PRs</b> against <code>registry/</code>; one-click promote is still "click Merge"; git audit log and rollback history survive unchanged.</li>
+      <li><b>EAS loses nothing either:</b> EAS branches are publish targets, not source branches — <code>eas update --branch module/pets/staging</code> runs from <code>modules/pets/</code> in the same monorepo.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ================= 04 SCORECARD ================= -->
+<section id="scorecard">
+  <div class="sec-head"><span class="sec-num">04</span><h2>Scorecard</h2><span class="sec-note">10 dimensions · longer bar = stronger position</span></div>
+  <div class="score-legend">
+    <span class="chip"><span class="bar-demo b1"></span>B1 — Pragmatic loader</span>
+    <span class="chip"><span class="bar-demo eas"></span>EAS — Sidecar delivery</span>
+  </div>
+  <table class="scorecard reveal">
+    <thead><tr><th style="width:34%">Dimension</th><th>Position</th><th style="width:16%">Edge</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><span class="dim-name">Custom code owned</span><span class="dim-sub">loader 500 + modctl 400 LOC vs Worker 200 + a living fork</span></td>
+        <td class="bars">
+          <div class="bar-row"><span class="bl">B1</span><div class="bar-track"><div class="bar-fill b1" data-w="80%"></div></div></div>
+          <div class="bar-row"><span class="bl">EAS</span><div class="bar-track"><div class="bar-fill eas" data-w="40%"></div></div></div>
+        </td>
+        <td class="who"><span class="w-b1">▲ B1</span></td>
+      </tr>
+      <tr>
+        <td><span class="dim-name">Fork-maintenance tax</span><span class="dim-sub">B1: none · EAS: re-sync sidecar every Expo SDK release, forever</span></td>
+        <td class="bars">
+          <div class="bar-row"><span class="bl">B1</span><div class="bar-track"><div class="bar-fill b1" data-w="100%"></div></div></div>
+          <div class="bar-row"><span class="bl">EAS</span><div class="bar-track"><div class="bar-fill eas" data-w="28%"></div></div></div>
+        </td>
+        <td class="who"><span class="w-b1">▲ B1</span></td>
+      </tr>
+      <tr>
+        <td><span class="dim-name">Vendor coupling / ToS risk</span><span class="dim-sub">R2→S3 is drop-in vs branches-as-registry on EAS terms (open-protocol exit exists)</span></td>
+        <td class="bars">
+          <div class="bar-row"><span class="bl">B1</span><div class="bar-track"><div class="bar-fill b1" data-w="90%"></div></div></div>
+          <div class="bar-row"><span class="bl">EAS</span><div class="bar-track"><div class="bar-fill eas" data-w="42%"></div></div></div>
+        </td>
+        <td class="who"><span class="w-b1">▲ B1</span></td>
+      </tr>
+      <tr>
+        <td><span class="dim-name">Time to first module</span><span class="dim-sub">B1: ~3 wks incl. signing · EAS Phase 1: 3–4 wks hash-only, signing lands with the fork</span></td>
+        <td class="bars">
+          <div class="bar-row"><span class="bl">B1</span><div class="bar-track"><div class="bar-fill b1" data-w="90%"></div></div></div>
+          <div class="bar-row"><span class="bl">EAS</span><div class="bar-track"><div class="bar-fill eas" data-w="68%"></div></div></div>
+        </td>
+        <td class="who"><span class="w-b1">▲ B1</span></td>
+      </tr>
+      <tr>
+        <td><span class="dim-name">Compatibility gating</span><span class="dim-sub">hand-rolled <code>semver.satisfies</code> in loader vs mechanical <code>runtimeVersion</code> — incompatible never downloaded</span></td>
+        <td class="bars">
+          <div class="bar-row"><span class="bl">B1</span><div class="bar-track"><div class="bar-fill b1" data-w="50%"></div></div></div>
+          <div class="bar-row"><span class="bl">EAS</span><div class="bar-track"><div class="bar-fill eas" data-w="90%"></div></div></div>
+        </td>
+        <td class="who"><span class="w-eas">▲ EAS</span></td>
+      </tr>
+      <tr>
+        <td><span class="dim-name">Signing &amp; key story</span><span class="dim-sub">ed25519 fine, but manifest unsigned in MVP vs RSA cert-chain + signed manifests, per-channel certs</span></td>
+        <td class="bars">
+          <div class="bar-row"><span class="bl">B1</span><div class="bar-track"><div class="bar-fill b1" data-w="56%"></div></div></div>
+          <div class="bar-row"><span class="bl">EAS</span><div class="bar-track"><div class="bar-fill eas" data-w="90%"></div></div></div>
+        </td>
+        <td class="who"><span class="w-eas">▲ EAS</span></td>
+      </tr>
+      <tr>
+        <td><span class="dim-name">Rollout / rollback ops</span><span class="dim-sub">repoint manifest (instant, no %) vs <code>--rollout-percentage</code> + republish + dashboard, free</span></td>
+        <td class="bars">
+          <div class="bar-row"><span class="bl">B1</span><div class="bar-track"><div class="bar-fill b1" data-w="48%"></div></div></div>
+          <div class="bar-row"><span class="bl">EAS</span><div class="bar-track"><div class="bar-fill eas" data-w="92%"></div></div></div>
+        </td>
+        <td class="who"><span class="w-eas">▲ EAS</span></td>
+      </tr>
+      <tr>
+        <td><span class="dim-name">Offline / caching maturity</span><span class="dim-sub">hand-rolled expo-file-system cache vs battle-tested SQLite DB + resumable downloads + recovery</span></td>
+        <td class="bars">
+          <div class="bar-row"><span class="bl">B1</span><div class="bar-track"><div class="bar-fill b1" data-w="48%"></div></div></div>
+          <div class="bar-row"><span class="bl">EAS</span><div class="bar-track"><div class="bar-fill eas" data-w="90%"></div></div></div>
+        </td>
+        <td class="who"><span class="w-eas">▲ EAS</span></td>
+      </tr>
+      <tr>
+        <td><span class="dim-name">Repo &amp; workflow ergonomics</span><span class="dim-sub">given the §03 monorepo conclusion: promotion-PR gate (git-native) vs branch publishes + EAS dashboard</span></td>
+        <td class="bars">
+          <div class="bar-row"><span class="bl">B1</span><div class="bar-track"><div class="bar-fill b1" data-w="80%"></div></div></div>
+          <div class="bar-row"><span class="bl">EAS</span><div class="bar-track"><div class="bar-fill eas" data-w="70%"></div></div></div>
+        </td>
+        <td class="who"><span class="w-tie">≈ tie / B1</span></td>
+      </tr>
+      <tr>
+        <td><span class="dim-name">Path to scale (modules/day)</span><span class="dim-sub">B1 retrofits a rollout Worker + runner fleet vs EAS infra scales now — but N modules is outside its tested envelope</span></td>
+        <td class="bars">
+          <div class="bar-row"><span class="bl">B1</span><div class="bar-track"><div class="bar-fill b1" data-w="58%"></div></div></div>
+          <div class="bar-row"><span class="bl">EAS</span><div class="bar-track"><div class="bar-fill eas" data-w="78%"></div></div></div>
+        </td>
+        <td class="who"><span class="w-eas">▲ EAS</span></td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="score-tally"><b class="b1">B1 wins the owner-burden axes</b> (code owned, no fork, no vendor, fastest first ship) — the ones that dominate <i>this quarter</i> for a solo owner. <b class="eas">EAS wins the at-scale ops axes</b> (gating, signing maturity, rollout, caching) — the ones that dominate <i>at modules/day cadence</i>. The split is honest 5 : 4 : 1 — the decision is about <i>when</i> each set of wins matters, not which list is longer.</p>
+</section>
+
+<!-- ================= 05 DEAL-BREAKERS ================= -->
+<section id="dealbreakers">
+  <div class="sec-head"><span class="sec-num">05</span><h2>Deal-Breakers, Both Ways</h2><span class="sec-note">what could make you regret each choice</span></div>
+  <div class="db-grid">
+    <div class="db-col b1 reveal">
+      <h3>If you pick B1, accept…</h3>
+      <div class="db">
+        <span class="sev">Structural</span>
+        <h4>Hand-rolled everything</h4>
+        <p>Downloader, file cache, circuit breaker, manifest sync — each is small, but every byte of delivery reliability is yours to debug. expo-updates has already shipped these to millions of devices; you're re-deriving them at miniature scale.</p>
+      </div>
+      <div class="db">
+        <span class="sev">Spike-gated</span>
+        <h4>Hermes <code>new Function</code> risk</h4>
+        <p>The whole plan rests on a day-1 device spike: evaluating an esbuild bundle via <code>new Function</code> in Hermes. Fallback (Metro module-ID offset multi-bundle) exists but costs most of a week and dents the "boring parts" story.</p>
+      </div>
+      <div class="db">
+        <span class="sev">Known gap</span>
+        <h4>Unsigned manifest in MVP</h4>
+        <p>Artifacts are ed25519-signed; the channel manifest is TLS-only. A CDN-level attacker can't inject code but <i>can</i> flip kill flags or hide modules. Manifest signing is the first Phase-2 retrofit — a known IOU, not a surprise.</p>
+      </div>
+      <div class="db">
+        <span class="sev">Retrofit list</span>
+        <h4>Scale features are IOUs</h4>
+        <p>Percentage rollout (Worker in front of R2), key rotation, runner fleet for smoke tests — all named, none built. The self-hosted Mac runner is a single point of failure and the first thing to crack at modules/day.</p>
+      </div>
+    </div>
+    <div class="db-col eas reveal">
+      <h3>If you pick EAS, accept…</h3>
+      <div class="db">
+        <span class="sev">Permanent tax</span>
+        <h4>Sidecar fork tracks upstream forever</h4>
+        <p>The <code>expo-module-host</code> fork of expo-updates internals (FileDownloader, CodeSigning, SQLite, SelectionPolicy) must be re-synced on <b>every Expo SDK release</b>. Kept additive it's adaptation, not invention — but it never goes away, and you are its only maintainer.</p>
+      </div>
+      <div class="db">
+        <span class="sev">Envelope risk</span>
+        <h4>N modules ≠ 1 update</h4>
+        <p>expo-updates is designed, tested, and operated for <i>one</i> update per app. Running N concurrent module updates through its machinery is outside the tested envelope — edge cases in the DB, selection policy, and recovery paths are yours to find first.</p>
+      </div>
+      <div class="db">
+        <span class="sev">Vendor</span>
+        <h4>EAS coupling</h4>
+        <p>Pricing, ToS, rollout tooling, dashboard — all EAS. The open protocol + reference server is a real exit hatch, but exercising it means standing up the very infrastructure B1 starts with.</p>
+      </div>
+      <div class="db">
+        <span class="sev">Convention abuse</span>
+        <h4>Branches-as-registry is a bend, not a fit</h4>
+        <p><code>module/&lt;id&gt;/&lt;channel&gt;</code> branches as a module registry is clever and unsupported. Nothing in EAS promises this pattern keeps working as their product evolves; the Metro externals hack (<code>resolveRequest</code> shim) is similarly unofficial.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 06 SWAP PATH ================= -->
+<section id="swap">
+  <div class="sec-head"><span class="sec-num">06</span><h2>The Hybrid Truth: Transport Is Swappable</h2><span class="sec-note">contract stable · backbone replaceable</span></div>
+  <p class="lede">The module contract — manifest (id, version, capabilities, mounts, <code>requiredSdkVersion</code>), the scoped-SDK <code>register()</code> shape, and signed artifacts — is <em>transport-agnostic by design</em> (spec G6/C8). Both proposals eval the same kind of bundle. So this is not a one-way door: start B1, swap the transport to EAS later (or the reverse) <b>without touching a single module's source</b>.</p>
+  <div class="diagram-frame reveal">
+    <svg class="diag" viewBox="0 0 980 230" role="img" aria-label="Transport swap around a stable module contract">
+      <defs>
+        <marker id="arr2" markerWidth="9" markerHeight="8" refX="7" refY="4" orient="auto">
+          <path d="M0,0 L8,4 L0,8 z" fill="#1d1f1a"/>
+        </marker>
+      </defs>
+      <rect x="330" y="40" width="320" height="130" fill="#efeadb" stroke="#1d1f1a" stroke-width="2"/>
+      <text x="490" y="68" text-anchor="middle" font-size="12.5" font-weight="700" letter-spacing="2" fill="#1d1f1a">MODULE CONTRACT — STABLE</text>
+      <text x="490" y="92" text-anchor="middle" font-size="10" fill="#3a3c33">manifest: id · version · capabilities · mounts</text>
+      <text x="490" y="110" text-anchor="middle" font-size="10" fill="#3a3c33">register(scopedSdk) → { mounts }</text>
+      <text x="490" y="128" text-anchor="middle" font-size="10" fill="#3a3c33">signed, content-addressed artifact</text>
+      <text x="490" y="150" text-anchor="middle" font-size="9.5" fill="#67695c">modules compiled once against this — never touched in a swap</text>
+
+      <rect x="30" y="62" width="240" height="86" fill="#dfece4" stroke="#2e6e4e" stroke-width="1.6"/>
+      <text x="150" y="90" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1e4f37">B1 TRANSPORT</text>
+      <text x="150" y="110" text-anchor="middle" font-size="9.5" fill="#3a3c33">R2 static JSON · custom loader</text>
+      <text x="150" y="126" text-anchor="middle" font-size="9.5" fill="#3a3c33">ed25519 · promotion PRs</text>
+
+      <rect x="710" y="62" width="240" height="86" fill="#e2e7f9" stroke="#2547c8" stroke-width="1.6"/>
+      <text x="830" y="90" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1c3699">EAS TRANSPORT</text>
+      <text x="830" y="110" text-anchor="middle" font-size="9.5" fill="#3a3c33">EAS branches · sidecar fork</text>
+      <text x="830" y="126" text-anchor="middle" font-size="9.5" fill="#3a3c33">RSA cert-chain · runtimeVersion</text>
+
+      <line x1="270" y1="105" x2="326" y2="105" stroke="#1d1f1a" stroke-width="1.6" marker-end="url(#arr2)"/>
+      <line x1="710" y1="105" x2="654" y2="105" stroke="#1d1f1a" stroke-width="1.6" marker-end="url(#arr2)"/>
+      <text x="490" y="200" text-anchor="middle" font-size="10.5" fill="#67695c">⇄ swap = replace loader internals + republish artifacts + re-key trust — modules untouched</text>
+    </svg>
+  </div>
+  <div class="swap-cost">
+    <div class="swap-card toeas reveal">
+      <h4>B1 → EAS: what the swap actually costs</h4>
+      <ul>
+        <li>Build/adopt the sidecar fork — the Phase-2 work you originally skipped (<b>4–6 wks</b>, the dominant cost)</li>
+        <li>Republish every module as an EAS update via CI re-run — <b>no module source changes</b>; manifest fields map into <code>extra.module</code></li>
+        <li>Host release: embed root cert, dual-trust ed25519 + RSA during the migration window, map channels → branches</li>
+        <li>Retire ~300 of the loader's 500 lines (fetch/cache/verify); keep <code>modctl</code> as a wrapper over <code>eas-cli</code></li>
+      </ul>
+    </div>
+    <div class="swap-card tob1 reveal">
+      <h4>EAS → B1 (the exit hatch, for symmetry)</h4>
+      <ul>
+        <li>Stand up R2 bucket + publish Action — <b>days</b>, not weeks</li>
+        <li>Re-sign artifacts with ed25519; pin pubkey in the next host release</li>
+        <li>Point the loader seam at static JSON instead of <code>loadModuleAsync</code></li>
+        <li>Drop the fork and its per-SDK-release sync ritual entirely</li>
+      </ul>
+    </div>
+  </div>
+  <p class="lede" style="margin-top:18px"><em>Asymmetry worth noticing:</em> leaving B1 costs the fork you avoided; leaving EAS costs days of commodity setup plus a re-sign. The cheap-to-exit option is also the cheap-to-enter one — which is what makes "B1 now, EAS if earned" a low-regret sequence rather than a fence-sit.</p>
+</section>
+
+<!-- ================= 07 FLOWCHART ================= -->
+<section id="flow">
+  <div class="sec-head"><span class="sec-num">07</span><h2>Decision Flowchart</h2><span class="sec-note">four questions · three exits</span></div>
+  <div class="diagram-frame reveal">
+    <svg class="diag" viewBox="0 0 980 640" role="img" aria-label="Decision flowchart">
+      <defs>
+        <marker id="arr3" markerWidth="9" markerHeight="8" refX="7" refY="4" orient="auto">
+          <path d="M0,0 L8,4 L0,8 z" fill="#1d1f1a"/>
+        </marker>
+      </defs>
+      <!-- Q1 -->
+      <polygon points="370,20 660,20 690,72 660,124 370,124 340,72" fill="#faf8f1" stroke="#1d1f1a" stroke-width="1.6"/>
+      <text x="515" y="62" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d1f1a">Q1 · Do you need staged % rollout or</text>
+      <text x="515" y="80" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d1f1a">cohort targeting in v1 — not later?</text>
+      <line x1="690" y1="72" x2="800" y2="72" stroke="#1d1f1a" stroke-width="1.6" marker-end="url(#arr3)"/>
+      <text x="730" y="62" font-size="10" font-weight="700" fill="#1c3699">YES</text>
+      <line x1="515" y1="124" x2="515" y2="166" stroke="#1d1f1a" stroke-width="1.6" marker-end="url(#arr3)"/>
+      <text x="528" y="150" font-size="10" font-weight="700" fill="#67695c">NO</text>
+
+      <!-- Q2 -->
+      <polygon points="370,170 660,170 690,222 660,274 370,274 340,222" fill="#faf8f1" stroke="#1d1f1a" stroke-width="1.6"/>
+      <text x="515" y="206" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d1f1a">Q2 · Will you happily own a fork of</text>
+      <text x="515" y="224" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d1f1a">expo-updates internals, re-synced</text>
+      <text x="515" y="242" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d1f1a">on every Expo SDK release?</text>
+      <line x1="690" y1="222" x2="800" y2="222" stroke="#1d1f1a" stroke-width="1.6" marker-end="url(#arr3)"/>
+      <text x="730" y="212" font-size="10" font-weight="700" fill="#1c3699">YES</text>
+      <line x1="515" y1="274" x2="515" y2="316" stroke="#1d1f1a" stroke-width="1.6" marker-end="url(#arr3)"/>
+      <text x="528" y="300" font-size="10" font-weight="700" fill="#67695c">NO</text>
+
+      <!-- Q3 -->
+      <polygon points="370,320 660,320 690,372 660,424 370,424 340,372" fill="#faf8f1" stroke="#1d1f1a" stroke-width="1.6"/>
+      <text x="515" y="362" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d1f1a">Q3 · Must the first module ship in</text>
+      <text x="515" y="380" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d1f1a">weeks, with one owner + AI agents?</text>
+      <line x1="690" y1="372" x2="800" y2="372" stroke="#1d1f1a" stroke-width="1.6" marker-end="url(#arr3)"/>
+      <text x="730" y="362" font-size="10" font-weight="700" fill="#1e4f37">YES</text>
+      <line x1="515" y1="424" x2="515" y2="466" stroke="#1d1f1a" stroke-width="1.6" marker-end="url(#arr3)"/>
+      <text x="528" y="450" font-size="10" font-weight="700" fill="#67695c">NO</text>
+
+      <!-- Q4 -->
+      <polygon points="370,470 660,470 690,522 660,574 370,574 340,522" fill="#faf8f1" stroke="#1d1f1a" stroke-width="1.6"/>
+      <text x="515" y="506" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d1f1a">Q4 · Do you genuinely expect</text>
+      <text x="515" y="524" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d1f1a">several-modules-per-day cadence</text>
+      <text x="515" y="542" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d1f1a">within ~6 months?</text>
+      <line x1="690" y1="522" x2="800" y2="522" stroke="#1d1f1a" stroke-width="1.6" marker-end="url(#arr3)"/>
+      <text x="730" y="512" font-size="10" font-weight="700" fill="#1c3699">YES</text>
+      <line x1="340" y1="522" x2="230" y2="522" stroke="#1d1f1a" stroke-width="1.6" marker-end="url(#arr3)"/>
+      <text x="280" y="512" font-size="10" font-weight="700" fill="#1e4f37">NO</text>
+
+      <!-- terminals -->
+      <rect x="804" y="42" width="150" height="60" fill="#e2e7f9" stroke="#2547c8" stroke-width="2"/>
+      <text x="879" y="68" text-anchor="middle" font-size="13" font-weight="700" fill="#1c3699">EAS</text>
+      <text x="879" y="86" text-anchor="middle" font-size="9" fill="#3a3c33">rollout is free there</text>
+
+      <rect x="804" y="192" width="150" height="60" fill="#e2e7f9" stroke="#2547c8" stroke-width="2"/>
+      <text x="879" y="218" text-anchor="middle" font-size="13" font-weight="700" fill="#1c3699">EAS</text>
+      <text x="879" y="236" text-anchor="middle" font-size="9" fill="#3a3c33">lean on mature cache/signing</text>
+
+      <rect x="784" y="332" width="190" height="80" fill="#dfece4" stroke="#2e6e4e" stroke-width="2"/>
+      <text x="879" y="360" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1e4f37">B1 NOW →</text>
+      <text x="879" y="378" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1e4f37">REASSESS AT SCALE</text>
+      <text x="879" y="398" text-anchor="middle" font-size="9" fill="#3a3c33">transport swap stays open (§06)</text>
+
+      <rect x="804" y="492" width="150" height="60" fill="#e2e7f9" stroke="#2547c8" stroke-width="2"/>
+      <text x="879" y="518" text-anchor="middle" font-size="13" font-weight="700" fill="#1c3699">EAS</text>
+      <text x="879" y="536" text-anchor="middle" font-size="9" fill="#3a3c33">buy the ops story up front</text>
+
+      <rect x="60" y="492" width="166" height="60" fill="#dfece4" stroke="#2e6e4e" stroke-width="2"/>
+      <text x="143" y="518" text-anchor="middle" font-size="13" font-weight="700" fill="#1e4f37">B1</text>
+      <text x="143" y="536" text-anchor="middle" font-size="9" fill="#3a3c33">simplest thing that ships</text>
+
+      <text x="60" y="36" font-size="10" fill="#67695c" letter-spacing="2">START ↓ ANSWER IN ORDER</text>
+    </svg>
+  </div>
+</section>
+
+<!-- ================= 08 FINAL VERDICT ================= -->
+<section id="final">
+  <div class="sec-head"><span class="sec-num">08</span><h2>Final Verdict</h2><span class="sec-note">weighed for this owner, this quarter</span></div>
+  <div class="final reveal">
+    <div class="v-label">Recommendation</div>
+    <h3><span class="ink-b1">B1 now</span> — one modules monorepo — EAS held as the earned upgrade</h3>
+    <p><b>Context that decides it:</b> a single owner working with AI agents, first module wanted in weeks, and a runtime model both proposals share anyway. On those weights, B1's wins (no fork, no vendor, ~900 lines you fully own, ~3 weeks to a signed, killable, rollback-able module) land <i>now</i>; EAS's wins (mechanical <code>runtimeVersion</code> gating, battle-tested SQLite cache, free staged rollout) land <i>at a cadence you haven't reached</i> — and the fork tax that buys them starts charging on day one, every Expo SDK release, with one maintainer to pay it.</p>
+    <p><b>Memo No. 1 doesn't pre-decide this.</b> Choosing EAS over Re.Pack answered "which existing machinery to bend if we bend one" — EAS won because Re.Pack abandons the Expo toolchain. This memo's question is <i>bend vs build-thin</i>, and "build-thin" keeps the Expo toolchain too. No contradiction in choosing B1 here.</p>
+    <ol>
+      <li><b>Run B1's day-1 spike first</b> (Hermes <code>new Function</code> of an esbuild bundle on device). If it fails twice — spike and fallback — the calculus genuinely flips toward EAS, whose Phase 1 has no such gate.</li>
+      <li><b>Adopt the §03 topology immediately:</b> one modules monorepo, directory per module, <code>registry/</code> inside it, agents in worktrees, bot-only merge/publish. Skip repo-per-module — the hesitation was right.</li>
+      <li><b>Write the loader seam as if the EAS swap will happen</b> (one <code>loadModule(id, channel)</code> facade). It costs nothing now and converts "reassess at scale" from a slogan into a 4–6 week, modules-untouched migration.</li>
+      <li><b>Define the reassessment trigger up front:</b> first scary promote that wants a 10% rollout, or sustained &gt;1 module/day, or the hand-rolled cache producing its second production incident — whichever comes first.</li>
+    </ol>
+    <p class="sig">Decision Memo No. 2 · b1-vs-eas · sources: IMPL_REVIEWED_1 · IMPL_GENERIC_1 · REVIEWED_SPEC · IMPLEMENTATION_COMPARISON</p>
+  </div>
+</section>
+
+<footer>
+  <span>Remote-Module Framework · Delivery Backbone Memo</span>
+  <span>Self-contained · no external assets · 2026-06-09</span>
+</footer>
+
+</div>
+
+<script>
+(function(){
+  // staggered reveal
+  var revealed = document.querySelectorAll('.reveal');
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){
+        e.target.classList.add('in');
+        // animate score bars when scorecard enters
+        e.target.querySelectorAll('.bar-fill').forEach(function(b,i){
+          setTimeout(function(){ b.style.width = b.getAttribute('data-w'); }, 120 + i*60);
+        });
+        io.unobserve(e.target);
+      }
+    });
+  },{threshold:0.12});
+  revealed.forEach(function(el){ io.observe(el); });
+
+  // active nav highlighting
+  var links = document.querySelectorAll('nav.toc a');
+  var sections = [];
+  links.forEach(function(a){
+    var sec = document.querySelector(a.getAttribute('href'));
+    if(sec) sections.push({a:a, sec:sec});
+  });
+  var navIO = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){
+        links.forEach(function(l){ l.classList.remove('active'); });
+        var match = sections.find(function(s){ return s.sec === e.target; });
+        if(match) match.a.classList.add('active');
+      }
+    });
+  },{rootMargin:'-20% 0px -60% 0px'});
+  sections.forEach(function(s){ navIO.observe(s.sec); });
+})();
+</script>
+</body>
+</html>

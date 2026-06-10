@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>03 · Verification — B1 Pragmatic MVP</title>
+<style>
+  :root{
+    --bg:#0a0c10; --bg2:#0d1016; --panel:#11151c; --panel2:#161b24;
+    --line:#222937; --line2:#2e3748;
+    --ink:#e9ecf2; --muted:#8b94a7; --faint:#5b6374;
+    --amber:#ffb454; --amber-dim:rgba(255,180,84,.12);
+    --green:#4cc38a; --green-dim:rgba(76,195,138,.1);
+    --red:#f06a5e; --blue:#6cb6ff; --purple:#c89bfa; --cyan:#56d0da;
+    --display:"Futura","Avenir Next Condensed","Trebuchet MS",sans-serif;
+    --body:"Avenir Next","Avenir","Helvetica Neue",sans-serif;
+    --mono:ui-monospace,"SF Mono","Menlo","Cascadia Code",monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.6}
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+    background:radial-gradient(1100px 480px at 75% -8%, rgba(76,195,138,.05), transparent 60%),
+    repeating-linear-gradient(0deg, transparent 0 2px, rgba(255,255,255,.012) 2px 3px);}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 32px;position:relative;z-index:1}
+
+  header.site{border-bottom:1px solid var(--line);position:sticky;top:0;z-index:50;
+    background:rgba(10,12,16,.88);backdrop-filter:blur(10px)}
+  .site-inner{max-width:1180px;margin:0 auto;padding:14px 32px;display:flex;align-items:center;gap:28px;flex-wrap:wrap}
+  .brand{font-family:var(--display);font-size:17px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink);
+    text-decoration:none;display:flex;align-items:center;gap:10px;white-space:nowrap}
+  .brand .b1{background:var(--amber);color:#10110c;padding:1px 8px;border-radius:3px;font-weight:700}
+  .brand .sub{color:var(--muted);font-size:12px;letter-spacing:.22em}
+  nav.stages{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+  nav.stages a{font-family:var(--mono);font-size:11.5px;color:var(--muted);text-decoration:none;padding:6px 11px;
+    border:1px solid transparent;border-radius:6px;letter-spacing:.04em;display:flex;align-items:center;gap:7px;transition:all .15s}
+  nav.stages a b{color:var(--faint);font-weight:600}
+  nav.stages a:hover{color:var(--ink);border-color:var(--line2);background:var(--panel)}
+  nav.stages a[aria-current]{color:var(--amber);border-color:rgba(255,180,84,.35);background:var(--amber-dim)}
+  nav.stages a[aria-current] b{color:var(--amber)}
+
+  .stagehead{padding:58px 0 14px;display:flex;align-items:flex-end;gap:26px;flex-wrap:wrap}
+  .stagehead .big{font-family:var(--display);font-size:clamp(60px,8vw,96px);line-height:.9;color:var(--amber)}
+  .stagehead h1{font-family:var(--display);font-weight:600;font-size:clamp(28px,3.6vw,42px);text-transform:uppercase;letter-spacing:.04em;line-height:1.05}
+  .stagehead .phase{font-family:var(--mono);font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:var(--amber);margin-bottom:8px}
+  .lede{max-width:860px;color:var(--muted);font-size:15.5px;margin:10px 0 38px}
+  .lede code{font-family:var(--mono);font-size:13px;color:var(--cyan)}
+  .lede strong{color:var(--ink)}
+
+  /* run header */
+  .runhead{border:1px solid var(--line);border-radius:12px;background:var(--bg2);padding:20px 24px;
+    display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+  .run-ok{width:42px;height:42px;border-radius:50%;background:var(--green-dim);border:1.5px solid var(--green);
+    display:flex;align-items:center;justify-content:center;color:var(--green);font-size:20px;flex:0 0 auto}
+  .runmeta .t{font-family:var(--mono);font-size:14px;color:var(--ink)}
+  .runmeta .t b{color:var(--amber);font-weight:600}
+  .runmeta .s{font-family:var(--mono);font-size:11.5px;color:var(--faint);margin-top:4px}
+  .runmeta .s em{color:var(--muted);font-style:normal}
+  .runstats{margin-left:auto;display:flex;gap:26px;font-family:var(--mono);font-size:11px;color:var(--faint);text-align:right}
+  .runstats b{display:block;color:var(--ink);font-size:14px;font-weight:600}
+
+  /* checks */
+  .checks{margin-top:22px;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .check{display:grid;grid-template-columns:54px 92px 1fr auto;gap:0 16px;align-items:center;
+    padding:13px 20px;border-top:1px solid var(--line);background:var(--bg2)}
+  .check:first-child{border-top:none}
+  .check .stat{font-size:15px}
+  .stat.ok{color:var(--green)} .stat.warn{color:var(--amber)}
+  .check .pid{font-family:var(--mono);font-size:11px;letter-spacing:.14em;color:var(--faint)}
+  .check .name{font-family:var(--mono);font-size:13px;color:var(--ink)}
+  .check .name small{display:block;color:var(--faint);font-size:11.5px;margin-top:2px;line-height:1.55}
+  .check .dur{font-family:var(--mono);font-size:11.5px;color:var(--faint);white-space:nowrap}
+  .check .name .g{color:var(--green)} .check .name .c{color:var(--cyan)} .check .name .a{color:var(--amber)}
+
+  .checksub{grid-column:1 / -1;margin:10px 0 4px;border:1px dashed var(--line2);border-radius:8px;
+    background:#0b0e13;padding:13px 16px;font-family:var(--mono);font-size:11.8px;line-height:1.75;color:var(--muted);overflow-x:auto;white-space:pre}
+  .checksub .ok{color:var(--green)} .checksub .dimm{color:var(--faint)} .checksub .cy{color:var(--cyan)} .checksub .wr{color:var(--amber)}
+
+  /* smoke screenshots */
+  .smokegal{grid-column:1 / -1;display:flex;gap:18px;flex-wrap:wrap;margin:12px 0 6px}
+  figure.shot{width:128px}
+  figure.shot svg{display:block;border-radius:14px;border:1px solid var(--line2);background:#0c0f15;width:100%;height:auto}
+  figure.shot figcaption{font-family:var(--mono);font-size:10px;color:var(--faint);margin-top:7px;line-height:1.6;text-align:center}
+  figure.shot figcaption b{color:var(--green);display:block;letter-spacing:.1em}
+
+  /* AI reports */
+  .reports{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:22px}
+  .report{border:1px solid var(--line);border-radius:12px;background:var(--bg2);overflow:hidden}
+  .rephead{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:13px;background:var(--panel)}
+  .repico{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex:0 0 auto}
+  .repico.code{background:rgba(200,155,250,.12);border:1px solid rgba(200,155,250,.4);color:var(--purple)}
+  .repico.beh{background:rgba(86,208,218,.1);border:1px solid rgba(86,208,218,.4);color:var(--cyan)}
+  .rephead h3{font-family:var(--display);font-size:14px;letter-spacing:.14em;text-transform:uppercase}
+  .rephead .sub{font-family:var(--mono);font-size:10.5px;color:var(--faint);margin-top:2px}
+  .verdict{margin-left:auto;font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;border-radius:99px;padding:4px 13px;border:1px solid}
+  .verdict.pass{color:var(--green);border-color:rgba(76,195,138,.5);background:var(--green-dim)}
+  .repbody{padding:18px 20px}
+  .repbody h5{font-family:var(--mono);font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--faint);margin:14px 0 8px}
+  .repbody h5:first-child{margin-top:0}
+  .findings{list-style:none}
+  .findings li{font-size:13px;color:var(--muted);padding:6px 0 6px 24px;position:relative;border-top:1px dashed var(--line)}
+  .findings li:first-child{border-top:none}
+  .findings li::before{position:absolute;left:0;font-family:var(--mono);font-size:11px}
+  .findings li.ok::before{content:"✓";color:var(--green)}
+  .findings li.minor::before{content:"△";color:var(--amber)}
+  .findings li code{font-family:var(--mono);font-size:11.5px;color:var(--cyan)}
+  table.flows{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:11.8px}
+  table.flows td,table.flows th{padding:7px 8px;border-top:1px solid var(--line);text-align:left}
+  table.flows th{color:var(--faint);font-weight:500;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;border-top:none}
+  table.flows td{color:var(--muted)} table.flows td:first-child{color:var(--ink)}
+  table.flows .p{color:var(--green)}
+
+  .nextbar{margin-top:26px;border:1px solid rgba(255,180,84,.4);border-radius:12px;background:var(--amber-dim);
+    padding:18px 24px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+  .nextbar .ic{font-size:20px;color:var(--amber)}
+  .nextbar p{font-size:13.5px;color:var(--muted);flex:1;min-width:280px}
+  .nextbar p b{color:var(--ink)} .nextbar p code{font-family:var(--mono);font-size:12px;color:var(--cyan)}
+  .nextbar a.btn{font-family:var(--mono);font-size:12px;color:#171204;background:var(--amber);text-decoration:none;
+    border-radius:7px;padding:9px 18px;font-weight:700;white-space:nowrap}
+  .nextbar a.btn:hover{filter:brightness(1.08)}
+
+  footer{margin-top:80px;border-top:1px solid var(--line);padding:26px 0 60px}
+  .foot-inner{max-width:1180px;margin:0 auto;padding:0 32px;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;
+    font-family:var(--mono);font-size:11.5px;color:var(--faint)}
+  footer a{color:var(--muted);text-decoration:none}
+  footer a:hover{color:var(--amber)}
+  @media(max-width:980px){.reports{grid-template-columns:1fr}.check{grid-template-columns:40px 1fr auto}.check .pid{display:none}}
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="site-inner">
+    <a class="brand" href="index.html"><span class="b1">B1</span> Pragmatic MVP <span class="sub">/ mockups</span></a>
+    <nav class="stages">
+      <a href="01-scaffold.html"><b>01</b> Scaffold</a>
+      <a href="02-sandbox.html"><b>02</b> Dev&nbsp;Loop</a>
+      <a href="03-verification.html" aria-current="page"><b>03</b> Verification</a>
+      <a href="04-promotion.html"><b>04</b> Promotion</a>
+      <a href="05-operations.html"><b>05</b> Operations</a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="stagehead">
+    <div class="big">03</div>
+    <div>
+      <div class="phase">Verification pipeline · P1–P7 · fully automated</div>
+      <h1>Every gate before the human</h1>
+    </div>
+  </div>
+  <p class="lede">
+    The agent pushes; <code>verify.yml</code> runs in the module repo. Static gates, a build-and-validate step, a
+    <strong>real simulator smoke test driven by argent MCP on a self-hosted Mac mini</strong>, then two AI review jobs
+    (<code>anthropics/claude-code-action</code>). The candidate artifact is the <strong>CI-built bundle</strong>, content-addressed —
+    never an agent-local build. Green pipeline → the promotion PR opens itself.
+  </p>
+
+  <!-- run header -->
+  <div class="runhead">
+    <div class="run-ok">✓</div>
+    <div class="runmeta">
+      <div class="t">verify.yml <b>#87</b> — feat: hourly forecast + severe-weather banner</div>
+      <div class="s">hearthlabs/<em>weather-widget</em> · commit <em>f3e9a21</em> · push to <em>main</em> · candidate <em>weather-widget@1.2.0</em></div>
+    </div>
+    <div class="runstats">
+      <span><b>7 / 7</b>checks passed</span>
+      <span><b>9m 04s</b>total</span>
+      <span><b>41.7 kB</b>artifact</span>
+      <span><b>9f2c41d8…</b>sha-256</span>
+    </div>
+  </div>
+
+  <!-- checks -->
+  <div class="checks">
+
+    <div class="check">
+      <span class="stat ok">●</span><span class="pid">P1</span>
+      <span class="name">Typecheck — <span class="c">tsc --noEmit</span><small>against published @app/sdk-types@1.4.0 · 0 errors</small></span>
+      <span class="dur">14 s</span>
+    </div>
+
+    <div class="check">
+      <span class="stat ok">●</span><span class="pid">P2</span>
+      <span class="name">Lint + import boundary — <span class="c">eslint .</span><small>no-restricted-imports: only @app/sdk + allowlisted deps · same config the agent saw at edit time (S5)</small></span>
+      <span class="dur">9 s</span>
+    </div>
+
+    <div class="check">
+      <span class="stat ok">●</span><span class="pid">P3</span>
+      <span class="name">Unit tests — <span class="c">jest</span> (Tier 1 harness)<small>34 passed, 0 failed · @app/sdk-mock · coverage 91% lines</small></span>
+      <span class="dur">21 s</span>
+    </div>
+
+    <div class="check">
+      <span class="stat ok">●</span><span class="pid">P4</span>
+      <span class="name">Build + validate — <span class="c">modctl validate</span><small>esbuild · ajv schema · capabilities/mounts vs host-contract.json · dep allowlist · side-effect probe</small></span>
+      <span class="dur">33 s</span>
+      <div class="checksub"><span class="ok">✔</span> esbuild → dist/weather-widget.js <span class="dimm">41.7 kB · iife · es2017 · externals → __hostRequire__</span>
+<span class="ok">✔</span> module.json valid <span class="dimm">(ajv, schemaVersion 1)</span>
+<span class="ok">✔</span> capabilities ⊆ host-contract.json <span class="dimm">{navigation, storage.scoped, events, network, theme} ⊆ 5 exposed groups</span>
+<span class="ok">✔</span> mounts exist on host <span class="dimm">route:home/weather · slot:home.cards (2 of 14 exposed)</span>
+<span class="ok">✔</span> bundled deps on allowlist <span class="dimm">date-fns@3.6 ✓ (allowlist = JSON array in registry repo, Q2)</span>
+<span class="ok">✔</span> side-effect probe: evaluated in Node with instrumented __hostRequire__ / __registerModule__
+  <span class="dimm">observed: 1× __registerModule__("weather-widget", fn) — no network, no timers, no foreign globals (C4)</span>
+<span class="dimm">artifact sha256 <span class="cy">9f2c41d8a6b3e07f…d9e0f81a</span> — uploaded as run artifact (this exact file ships if promoted)</span></div>
+    </div>
+
+    <div class="check">
+      <span class="stat ok">●</span><span class="pid">P5</span>
+      <span class="name">Simulator smoke test — self-hosted macOS runner <span class="a">mac-mini-01</span><small>dev shell installed · modctl dev · argent MCP drives the 3 flows declared in FEATURE_SPEC.md · 11 steps · 0 error-boundary trips · screen recording uploaded</small></span>
+      <span class="dur">4 m 12 s</span>
+
+      <div class="smokegal">
+        <figure class="shot">
+          <svg viewBox="0 0 128 252" xmlns="http://www.w3.org/2000/svg">
+            <rect x="1" y="1" width="126" height="250" rx="14" fill="#0e1118" stroke="#2e3748"/>
+            <rect x="49" y="7" width="30" height="7" rx="3.5" fill="#000"/>
+            <rect x="10" y="22" width="108" height="9" rx="2" fill="#ffb454" opacity=".9"/>
+            <text x="64" y="29" font-family="Menlo,monospace" font-size="4.6" fill="#171204" text-anchor="middle">DEV SHELL · localhost:8090</text>
+            <text x="12" y="46" font-family="Menlo,monospace" font-size="5" fill="#5b6374">TUE · JUN 9</text>
+            <text x="12" y="58" font-family="Futura,sans-serif" font-size="10" fill="#e9ecf2">Hearth</text>
+            <rect x="10" y="66" width="108" height="62" rx="8" fill="#151a23" stroke="#ffb454" stroke-opacity=".6"/>
+            <text x="17" y="79" font-family="Menlo,monospace" font-size="4.6" fill="#5b6374">WEATHER · KRAKÓW</text>
+            <circle cx="26" cy="96" r="7" fill="#ffb454"/>
+            <text x="40" y="101" font-family="Futura,sans-serif" font-size="15" fill="#e9ecf2">18°</text>
+            <text x="68" y="94" font-family="Menlo,monospace" font-size="4.8" fill="#8b94a7">Partly cloudy</text>
+            <text x="68" y="102" font-family="Menlo,monospace" font-size="4.4" fill="#5b6374">H 21° L 12°</text>
+            <g fill="#ffb454" opacity=".75">
+              <rect x="17" y="114" width="12" height="8" rx="1.5"/><rect x="33" y="111" width="12" height="11" rx="1.5"/>
+              <rect x="49" y="109" width="12" height="13" rx="1.5"/><rect x="65" y="110" width="12" height="12" rx="1.5"/>
+              <rect x="81" y="113" width="12" height="9" rx="1.5"/><rect x="97" y="116" width="12" height="6" rx="1.5"/>
+            </g>
+            <rect x="10" y="136" width="108" height="42" rx="8" fill="#151a23" stroke="#222937"/>
+            <text x="17" y="149" font-family="Menlo,monospace" font-size="4.6" fill="#5b6374">PET TRACKER</text>
+            <text x="17" y="162" font-family="Menlo,monospace" font-size="5.4" fill="#e9ecf2">Biscuit · 32 min walk</text>
+            <rect x="10" y="186" width="108" height="36" rx="8" fill="#151a23" stroke="#222937"/>
+            <text x="17" y="199" font-family="Menlo,monospace" font-size="4.6" fill="#5b6374">TODAY</text>
+            <text x="17" y="211" font-family="Menlo,monospace" font-size="5.4" fill="#e9ecf2">3 things planned</text>
+            <rect x="10" y="232" width="108" height="1" fill="#222937"/>
+            <circle cx="34" cy="242" r="3" fill="#ffb454"/><circle cx="64" cy="242" r="3" fill="#2e3748"/><circle cx="94" cy="242" r="3" fill="#2e3748"/>
+          </svg>
+          <figcaption><b>FLOW 1 · PASS</b>home card · temp within 2 s of mount</figcaption>
+        </figure>
+
+        <figure class="shot">
+          <svg viewBox="0 0 128 252" xmlns="http://www.w3.org/2000/svg">
+            <rect x="1" y="1" width="126" height="250" rx="14" fill="#0e1118" stroke="#2e3748"/>
+            <rect x="49" y="7" width="30" height="7" rx="3.5" fill="#000"/>
+            <text x="12" y="32" font-family="Menlo,monospace" font-size="6" fill="#ffb454">‹</text>
+            <text x="64" y="32" font-family="Futura,sans-serif" font-size="7.5" fill="#e9ecf2" text-anchor="middle">Forecast</text>
+            <text x="64" y="44" font-family="Menlo,monospace" font-size="4.6" fill="#5b6374" text-anchor="middle">route:home/weather</text>
+            <g>
+              <rect x="10" y="54" width="108" height="20" rx="5" fill="#151a23" stroke="#222937"/>
+              <text x="17" y="67" font-family="Menlo,monospace" font-size="5" fill="#8b94a7">13:00</text>
+              <circle cx="58" cy="64" r="4.5" fill="#ffb454"/>
+              <text x="110" y="67" font-family="Menlo,monospace" font-size="5.4" fill="#e9ecf2" text-anchor="end">19°</text>
+              <rect x="10" y="78" width="108" height="20" rx="5" fill="#151a23" stroke="#222937"/>
+              <text x="17" y="91" font-family="Menlo,monospace" font-size="5" fill="#8b94a7">14:00</text>
+              <circle cx="58" cy="88" r="4.5" fill="#ffb454"/>
+              <text x="110" y="91" font-family="Menlo,monospace" font-size="5.4" fill="#e9ecf2" text-anchor="end">20°</text>
+              <rect x="10" y="102" width="108" height="20" rx="5" fill="#151a23" stroke="#222937"/>
+              <text x="17" y="115" font-family="Menlo,monospace" font-size="5" fill="#8b94a7">15:00</text>
+              <path d="M52 116 q6 -8 12 0" stroke="#8b94a7" fill="none" stroke-width="1.4"/>
+              <text x="110" y="115" font-family="Menlo,monospace" font-size="5.4" fill="#e9ecf2" text-anchor="end">20°</text>
+              <rect x="10" y="126" width="108" height="20" rx="5" fill="#151a23" stroke="#222937"/>
+              <text x="17" y="139" font-family="Menlo,monospace" font-size="5" fill="#8b94a7">16:00</text>
+              <text x="110" y="139" font-family="Menlo,monospace" font-size="5.4" fill="#e9ecf2" text-anchor="end">18°</text>
+              <rect x="10" y="150" width="108" height="20" rx="5" fill="#151a23" stroke="#222937"/>
+              <text x="17" y="163" font-family="Menlo,monospace" font-size="5" fill="#8b94a7">17:00</text>
+              <text x="110" y="163" font-family="Menlo,monospace" font-size="5.4" fill="#e9ecf2" text-anchor="end">16°</text>
+              <rect x="10" y="174" width="108" height="20" rx="5" fill="#151a23" stroke="#222937"/>
+              <text x="17" y="187" font-family="Menlo,monospace" font-size="5" fill="#8b94a7">18:00</text>
+              <text x="110" y="187" font-family="Menlo,monospace" font-size="5.4" fill="#e9ecf2" text-anchor="end">15°</text>
+            </g>
+            <rect x="10" y="232" width="108" height="1" fill="#222937"/>
+            <circle cx="34" cy="242" r="3" fill="#ffb454"/><circle cx="64" cy="242" r="3" fill="#2e3748"/><circle cx="94" cy="242" r="3" fill="#2e3748"/>
+          </svg>
+          <figcaption><b>FLOW 2 · PASS</b>tap card → hourly forecast route</figcaption>
+        </figure>
+
+        <figure class="shot">
+          <svg viewBox="0 0 128 252" xmlns="http://www.w3.org/2000/svg">
+            <rect x="1" y="1" width="126" height="250" rx="14" fill="#0e1118" stroke="#2e3748"/>
+            <rect x="49" y="7" width="30" height="7" rx="3.5" fill="#000"/>
+            <text x="64" y="32" font-family="Futura,sans-serif" font-size="7.5" fill="#e9ecf2" text-anchor="middle">Forecast</text>
+            <circle cx="64" cy="56" r="8" fill="none" stroke="#56d0da" stroke-width="2" stroke-dasharray="32 18"/>
+            <text x="64" y="76" font-family="Menlo,monospace" font-size="4.8" fill="#56d0da" text-anchor="middle">refreshing…</text>
+            <g opacity=".45">
+              <rect x="10" y="88" width="108" height="20" rx="5" fill="#151a23" stroke="#222937"/>
+              <rect x="10" y="112" width="108" height="20" rx="5" fill="#151a23" stroke="#222937"/>
+              <rect x="10" y="136" width="108" height="20" rx="5" fill="#151a23" stroke="#222937"/>
+              <rect x="10" y="160" width="108" height="20" rx="5" fill="#151a23" stroke="#222937"/>
+            </g>
+            <text x="64" y="206" font-family="Menlo,monospace" font-size="4.6" fill="#5b6374" text-anchor="middle">sdk.network.fetch → refetch ok</text>
+            <rect x="10" y="232" width="108" height="1" fill="#222937"/>
+            <circle cx="34" cy="242" r="3" fill="#ffb454"/><circle cx="64" cy="242" r="3" fill="#2e3748"/><circle cx="94" cy="242" r="3" fill="#2e3748"/>
+          </svg>
+          <figcaption><b>FLOW 3 · PASS</b>pull-to-refresh refetches · stale &gt; 30 min auto-refresh</figcaption>
+        </figure>
+
+        <figure class="shot">
+          <svg viewBox="0 0 128 252" xmlns="http://www.w3.org/2000/svg">
+            <rect x="1" y="1" width="126" height="250" rx="14" fill="#0e1118" stroke="#2e3748"/>
+            <rect x="49" y="7" width="30" height="7" rx="3.5" fill="#000"/>
+            <text x="64" y="32" font-family="Futura,sans-serif" font-size="7.5" fill="#e9ecf2" text-anchor="middle">Forecast</text>
+            <rect x="10" y="42" width="108" height="26" rx="6" fill="rgba(240,106,94,.14)" stroke="#f06a5e"/>
+            <text x="20" y="53" font-family="Menlo,monospace" font-size="5" fill="#f06a5e">⚠ SEVERE · thunderstorm</text>
+            <text x="20" y="62" font-family="Menlo,monospace" font-size="4.4" fill="#8b94a7">warning until 21:00</text>
+            <g opacity=".8">
+              <rect x="10" y="78" width="108" height="20" rx="5" fill="#151a23" stroke="#222937"/>
+              <rect x="10" y="102" width="108" height="20" rx="5" fill="#151a23" stroke="#222937"/>
+              <rect x="10" y="126" width="108" height="20" rx="5" fill="#151a23" stroke="#222937"/>
+              <rect x="10" y="150" width="108" height="20" rx="5" fill="#151a23" stroke="#222937"/>
+              <rect x="10" y="174" width="108" height="20" rx="5" fill="#151a23" stroke="#222937"/>
+            </g>
+            <rect x="10" y="232" width="108" height="1" fill="#222937"/>
+            <circle cx="34" cy="242" r="3" fill="#ffb454"/><circle cx="64" cy="242" r="3" fill="#2e3748"/><circle cx="94" cy="242" r="3" fill="#2e3748"/>
+          </svg>
+          <figcaption><b>NEW IN 1.2.0 · PASS</b>severe-weather banner (host design-system Alert)</figcaption>
+        </figure>
+      </div>
+      <div class="checksub"><span class="dimm">artifacts:</span> flow-recording.mp4 <span class="dimm">(1:42)</span> · 11 screenshots · argent step log <span class="dimm">— attached to run, embedded in the promotion PR (P8)</span>
+<span class="dimm">gate rule: crash, error-boundary trip, or failed flow step ⇒ red build</span></div>
+    </div>
+
+    <div class="check">
+      <span class="stat ok">●</span><span class="pid">P6</span>
+      <span class="name">AI code review — <span class="c">anthropics/claude-code-action</span><small>structured review over diff + manifest → code-review.md · includes store-compliance checklist (K3)</small></span>
+      <span class="dur">1 m 38 s</span>
+    </div>
+
+    <div class="check">
+      <span class="stat ok">●</span><span class="pid">P7</span>
+      <span class="name">AI behavioral review — second agent job<small>replays P5 recordings against FEATURE_SPEC.md → behavior-review.md · pass / fail-with-findings</small></span>
+      <span class="dur">2 m 07 s</span>
+    </div>
+  </div>
+
+  <!-- AI report details -->
+  <div class="reports">
+    <div class="report">
+      <div class="rephead">
+        <div class="repico code">{ }</div>
+        <div>
+          <h3>code-review.md</h3>
+          <div class="sub">P6 · code-review agent · diff f3e9a21 + module.json</div>
+        </div>
+        <span class="verdict pass">APPROVE · 2 minor</span>
+      </div>
+      <div class="repbody">
+        <h5>Findings</h5>
+        <ul class="findings">
+          <li class="ok">Capabilities appropriate: requests exactly the 5 groups it uses; no <code>camera</code>/<code>location</code> creep.</li>
+          <li class="ok">Data handling: location stored only via <code>sdk.storage</code> (module-namespaced, C6); no PII leaves the device except the forecast query.</li>
+          <li class="ok">No injection/exfiltration patterns; all network through <code>sdk.network.fetch</code>; no dynamic code, no <code>eval</code>.</li>
+          <li class="ok">Design system: Card/Screen/Alert primitives used throughout (C5).</li>
+          <li class="minor">Minor: <code>formatHour()</code> duplicates a <code>date-fns</code> helper — dead weight, not blocking.</li>
+          <li class="minor">Minor: severe-banner copy hardcoded in English; suggest <code>sdk.theme.locale</code> in a follow-up.</li>
+        </ul>
+        <h5>Store compliance (K3)</h5>
+        <ul class="findings">
+          <li class="ok">Does not change the app's primary purpose · no payment circumvention · no app-within-app surface. Interpreted JS only — same footing as EAS Update/CodePush (K1).</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="report">
+      <div class="rephead">
+        <div class="repico beh">▶</div>
+        <div>
+          <h3>behavior-review.md</h3>
+          <div class="sub">P7 · behavioral-verification agent · recordings vs FEATURE_SPEC.md</div>
+        </div>
+        <span class="verdict pass">PASS · 1 finding</span>
+      </div>
+      <div class="repbody">
+        <h5>Flows vs spec</h5>
+        <table class="flows">
+          <tr><th>Flow</th><th>Spec says</th><th>Observed</th><th></th></tr>
+          <tr><td>1 · home card</td><td>temp ≤ 2 s of mount</td><td>1.3 s, correct location</td><td class="p">PASS</td></tr>
+          <tr><td>2 · forecast route</td><td>tap → hourly list</td><td>route:home/weather · 24 rows</td><td class="p">PASS</td></tr>
+          <tr><td>3 · refresh</td><td>pull refetches; stale &gt; 30 min auto</td><td>refetch observed; auto-refresh simulated via clock skew</td><td class="p">PASS</td></tr>
+          <tr><td>+ banner (new)</td><td>severe alert visible</td><td>renders, dismissible, reappears on new alert</td><td class="p">PASS</td></tr>
+        </table>
+        <h5>Finding (non-blocking)</h5>
+        <ul class="findings">
+          <li class="minor">Forecast screen shows a blank state for ~400 ms before the skeleton appears on cold cache. Within spec ("within 2 s") but worth a polish issue.</li>
+        </ul>
+        <h5>Verdict</h5>
+        <ul class="findings">
+          <li class="ok">Behavior matches FEATURE_SPEC.md. Recommend promote. No error-boundary activity in 4 m 12 s of driving.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="nextbar">
+    <span class="ic">⛟</span>
+    <p><b>Pipeline green → P8 fired:</b> a promotion PR was auto-opened in <code>hearthlabs/registry</code> with the manifest diff,
+       both AI reports, and the flow recording embedded. The candidate is the CI artifact
+       <code>9f2c41d8….js</code> — the next human action is one click.</p>
+    <a class="btn" href="04-promotion.html">View promotion PR #214 →</a>
+  </div>
+
+</div>
+
+<footer>
+  <div class="foot-inner">
+    <span>stage 03 of 05 · verification · B1 Pragmatic MVP</span>
+    <span><a href="02-sandbox.html">← 02 · Dev loop</a> &nbsp;·&nbsp; next: <a href="04-promotion.html">04 · Promotion →</a></span>
+  </div>
+</footer>
+
+</body>
+</html>

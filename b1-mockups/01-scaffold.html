@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>01 · Scaffold — B1 Pragmatic MVP</title>
+<style>
+  :root{
+    --bg:#0a0c10; --bg2:#0d1016; --panel:#11151c; --panel2:#161b24;
+    --line:#222937; --line2:#2e3748;
+    --ink:#e9ecf2; --muted:#8b94a7; --faint:#5b6374;
+    --amber:#ffb454; --amber-dim:rgba(255,180,84,.12);
+    --green:#4cc38a; --red:#f06a5e; --blue:#6cb6ff; --purple:#c89bfa; --cyan:#56d0da;
+    --display:"Futura","Avenir Next Condensed","Trebuchet MS",sans-serif;
+    --body:"Avenir Next","Avenir","Helvetica Neue",sans-serif;
+    --mono:ui-monospace,"SF Mono","Menlo","Cascadia Code",monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.6}
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+    background:radial-gradient(1100px 480px at 75% -8%, rgba(255,180,84,.06), transparent 60%),
+    repeating-linear-gradient(0deg, transparent 0 2px, rgba(255,255,255,.012) 2px 3px);}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 32px;position:relative;z-index:1}
+
+  header.site{border-bottom:1px solid var(--line);position:sticky;top:0;z-index:50;
+    background:rgba(10,12,16,.88);backdrop-filter:blur(10px)}
+  .site-inner{max-width:1180px;margin:0 auto;padding:14px 32px;display:flex;align-items:center;gap:28px;flex-wrap:wrap}
+  .brand{font-family:var(--display);font-size:17px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink);
+    text-decoration:none;display:flex;align-items:center;gap:10px;white-space:nowrap}
+  .brand .b1{background:var(--amber);color:#10110c;padding:1px 8px;border-radius:3px;font-weight:700}
+  .brand .sub{color:var(--muted);font-size:12px;letter-spacing:.22em}
+  nav.stages{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+  nav.stages a{font-family:var(--mono);font-size:11.5px;color:var(--muted);text-decoration:none;padding:6px 11px;
+    border:1px solid transparent;border-radius:6px;letter-spacing:.04em;display:flex;align-items:center;gap:7px;transition:all .15s}
+  nav.stages a b{color:var(--faint);font-weight:600}
+  nav.stages a:hover{color:var(--ink);border-color:var(--line2);background:var(--panel)}
+  nav.stages a[aria-current]{color:var(--amber);border-color:rgba(255,180,84,.35);background:var(--amber-dim)}
+  nav.stages a[aria-current] b{color:var(--amber)}
+
+  .stagehead{padding:58px 0 14px;display:flex;align-items:flex-end;gap:26px;flex-wrap:wrap}
+  .stagehead .big{font-family:var(--display);font-size:clamp(60px,8vw,96px);line-height:.9;color:var(--amber)}
+  .stagehead h1{font-family:var(--display);font-weight:600;font-size:clamp(28px,3.6vw,42px);text-transform:uppercase;letter-spacing:.04em;line-height:1.05}
+  .stagehead .phase{font-family:var(--mono);font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:var(--amber);margin-bottom:8px}
+  .lede{max-width:840px;color:var(--muted);font-size:15.5px;margin:10px 0 44px}
+  .lede code{font-family:var(--mono);font-size:13px;color:var(--cyan)}
+  .lede strong{color:var(--ink)}
+
+  /* terminal */
+  .term{border:1px solid var(--line2);border-radius:11px;background:#0b0e13;overflow:hidden;
+    box-shadow:0 22px 50px -28px rgba(0,0,0,.85)}
+  .term-bar{display:flex;align-items:center;gap:8px;background:var(--panel2);border-bottom:1px solid var(--line);
+    padding:9px 14px}
+  .dot{width:11px;height:11px;border-radius:50%}
+  .dot.r{background:#ff5f57}.dot.y{background:#febc2e}.dot.g{background:#28c840}
+  .term-title{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-left:10px;letter-spacing:.04em}
+  .term-body{padding:18px 20px 22px;font-family:var(--mono);font-size:12.8px;line-height:1.72;overflow-x:auto;white-space:pre}
+  .p{color:var(--green)} .cmd{color:var(--ink);font-weight:600} .fl{color:var(--muted)}
+  .ok{color:var(--green)} .inf{color:var(--blue)} .wr{color:var(--amber)} .dimm{color:var(--faint)}
+  .tree{color:var(--muted)} .tree .d{color:var(--blue)} .tree .f{color:var(--ink)} .tree .an{color:var(--amber)}
+  .caret::after{content:"▋";color:var(--amber);animation:blink 1.1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+
+  /* code panels */
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:22px}
+  .code{border:1px solid var(--line);border-radius:11px;background:var(--bg2);overflow:hidden}
+  .code-bar{display:flex;align-items:center;justify-content:space-between;background:var(--panel);border-bottom:1px solid var(--line);padding:8px 16px}
+  .code-bar .fn{font-family:var(--mono);font-size:12px;color:var(--ink)}
+  .code-bar .tag{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--amber);
+    border:1px solid rgba(255,180,84,.35);border-radius:99px;padding:2px 9px}
+  .code-bar .tag.t2{color:var(--purple);border-color:rgba(200,155,250,.35)}
+  .code pre{padding:16px 18px;font-family:var(--mono);font-size:12.3px;line-height:1.7;overflow-x:auto;color:var(--muted)}
+  .jk{color:var(--blue)} .js{color:var(--green)} .jn{color:var(--amber)} .jb{color:var(--red)} .jp{color:var(--faint)}
+  .kw{color:var(--purple)} .ty{color:var(--cyan)} .fn2{color:var(--blue)} .st{color:var(--green)} .cm{color:var(--faint);font-style:italic} .id{color:var(--ink)}
+
+  .callouts{margin:26px 0 0;display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .co{border:1px solid var(--line);border-left:3px solid var(--amber);border-radius:8px;background:var(--bg2);padding:16px 18px}
+  .co h4{font-family:var(--display);font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--amber);margin-bottom:8px}
+  .co p{font-size:13px;color:var(--muted)}
+  .co p code{font-family:var(--mono);font-size:11.5px;color:var(--cyan)}
+  .co.green{border-left-color:var(--green)} .co.green h4{color:var(--green)}
+  .co.purple{border-left-color:var(--purple)} .co.purple h4{color:var(--purple)}
+
+  h2.sec{font-family:var(--display);font-size:14px;letter-spacing:.3em;text-transform:uppercase;color:var(--ink);margin:54px 0 18px;
+    display:flex;align-items:center;gap:16px}
+  h2.sec::after{content:"";flex:1;height:1px;background:var(--line)}
+
+  footer{margin-top:80px;border-top:1px solid var(--line);padding:26px 0 60px}
+  .foot-inner{max-width:1180px;margin:0 auto;padding:0 32px;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;
+    font-family:var(--mono);font-size:11.5px;color:var(--faint)}
+  footer a{color:var(--muted);text-decoration:none}
+  footer a:hover{color:var(--amber)}
+
+  @media(max-width:980px){.grid2{grid-template-columns:1fr}.callouts{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="site-inner">
+    <a class="brand" href="index.html"><span class="b1">B1</span> Pragmatic MVP <span class="sub">/ mockups</span></a>
+    <nav class="stages">
+      <a href="01-scaffold.html" aria-current="page"><b>01</b> Scaffold</a>
+      <a href="02-sandbox.html"><b>02</b> Dev&nbsp;Loop</a>
+      <a href="03-verification.html"><b>03</b> Verification</a>
+      <a href="04-promotion.html"><b>04</b> Promotion</a>
+      <a href="05-operations.html"><b>05</b> Operations</a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="stagehead">
+    <div class="big">01</div>
+    <div>
+      <div class="phase">Agent sandbox · S1–S2, S7</div>
+      <h1>A module is born</h1>
+    </div>
+  </div>
+  <p class="lede">
+    The owner writes a <code>FEATURE_SPEC.md</code>, then scaffolds a fresh repo from the
+    <strong>GitHub template</strong> <code>hearthlabs/module-template</code>. The agent that takes over gets a typed SDK,
+    edit-time import-boundary lint, a Tier-1 test harness, and the full <code>verify.yml</code> pipeline preinstalled —
+    and <strong>zero credentials for the host repo</strong>. Core protection is GitHub permissions, nothing cleverer.
+  </p>
+
+  <div class="term">
+    <div class="term-bar">
+      <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+      <span class="term-title">owner@mac — zsh — ~/modules</span>
+    </div>
+    <div class="term-body"><span class="p">owner@mac ~/modules %</span> <span class="cmd">modctl create weather-widget</span> <span class="fl">--template hearthlabs/module-template</span>
+
+<span class="ok">✔</span> Created repo <span class="cmd">hearthlabs/weather-widget</span> from template <span class="dimm">hearthlabs/module-template</span>
+<span class="ok">✔</span> Cloned to <span class="cmd">~/modules/weather-widget</span>
+<span class="ok">✔</span> Installed <span class="inf">@app/sdk-types@1.4.0</span>, <span class="inf">@app/sdk-mock@1.4.0</span> <span class="dimm">(GitHub Packages, published from host repo)</span>
+<span class="ok">✔</span> Fetched <span class="inf">host-contract.json</span> <span class="dimm">— host SDK 1.4.0 · 5 capability groups · 14 mount points</span>
+
+<span class="tree">  weather-widget/
+  ├── <span class="an">FEATURE_SPEC.md</span>              <span class="dimm">← owner fills this in; input for the agent AND the behavioral reviewer (S7/P7)</span>
+  ├── <span class="an">module.json</span>                  <span class="dimm">← manifest: id · capabilities · mounts · requiredSdkVersion</span>
+  ├── <span class="d">src/</span>
+  │   └── <span class="f">index.tsx</span>                <span class="dimm">← register-function entry point (C4)</span>
+  ├── <span class="d">__tests__/</span>
+  │   └── <span class="f">index.test.tsx</span>           <span class="dimm">← Tier 1: jest + @app/sdk-mock (S3)</span>
+  ├── <span class="d">.github/workflows/</span>
+  │   └── <span class="f">verify.yml</span>               <span class="dimm">← pipeline P1–P7, runs on every push</span>
+  ├── <span class="f">.eslintrc.cjs</span>                <span class="dimm">← no-restricted-imports: only @app/sdk + dep allowlist (S5/P2)</span>
+  ├── <span class="f">tsconfig.json</span>                <span class="dimm">← types resolved against @app/sdk-types</span>
+  └── <span class="f">package.json</span>                 <span class="dimm">← scripts: modctl build · validate · dev</span></span>
+
+<span class="inf">ℹ</span> Agent access: <span class="cmd">write</span> on hearthlabs/weather-widget · <span class="wr">none</span> on hearthlabs/host <span class="dimm">(S2 — host consumed only as dev-shell build + sdk-types package)</span>
+<span class="inf">ℹ</span> Next: write FEATURE_SPEC.md, then hand the repo to the feature agent.
+
+<span class="p">owner@mac ~/modules %</span> <span class="cmd">cd weather-widget && head -14 FEATURE_SPEC.md</span>
+<span class="dimm"># FEATURE_SPEC — weather-widget
+
+A glanceable weather card on the Hearth home screen, with a full forecast screen.
+
+## Flows (drive these in P5 / verify in P7)
+1. Home card shows current temp + condition for the stored location, within 2 s of mount.
+2. Tapping the card navigates to route:home/weather with an hourly forecast list.
+3. Pull-to-refresh on the forecast screen refetches; stale data older than 30 min auto-refreshes.
+
+## Acceptance
+- Uses host design-system Card/Text primitives (C5). No raw colors.
+- Location read/written only via sdk.storage (scoped, namespaced by module id).
+- Network only through sdk.network.fetch — direct fetch() is a lint error.</span>
+<span class="p">owner@mac ~/modules/weather-widget %</span> <span class="caret"></span></div>
+  </div>
+
+  <h2 class="sec">What the template hands the agent</h2>
+
+  <div class="grid2">
+    <div class="code">
+      <div class="code-bar">
+        <span class="fn">module.json</span>
+        <span class="tag">manifest · validated by ajv (P4) + host loader</span>
+      </div>
+      <pre><span class="jp">{</span>
+  <span class="jk">"id"</span><span class="jp">:</span> <span class="js">"weather-widget"</span><span class="jp">,</span>
+  <span class="jk">"version"</span><span class="jp">:</span> <span class="js">"0.1.0"</span><span class="jp">,</span>
+  <span class="jk">"entryPoint"</span><span class="jp">:</span> <span class="js">"index"</span><span class="jp">,</span>
+  <span class="jk">"requiredSdkVersion"</span><span class="jp">:</span> <span class="js">"^1.0.0"</span><span class="jp">,</span>
+  <span class="jk">"capabilities"</span><span class="jp">:</span> <span class="jp">[</span>
+    <span class="js">"navigation"</span><span class="jp">,</span>
+    <span class="js">"storage.scoped"</span><span class="jp">,</span>
+    <span class="js">"events"</span><span class="jp">,</span>
+    <span class="js">"network"</span><span class="jp">,</span>
+    <span class="js">"theme"</span>
+  <span class="jp">],</span>
+  <span class="jk">"mounts"</span><span class="jp">:</span> <span class="jp">[</span>
+    <span class="js">"route:home/weather"</span><span class="jp">,</span>
+    <span class="js">"slot:home.cards"</span>
+  <span class="jp">]</span>
+<span class="jp">}</span>
+
+<span class="cm">// hash · signature · keyId are appended at publish time (P9),</span>
+<span class="cm">// never written by the agent. rollout/cohorts stay reserved (B5).</span></pre>
+    </div>
+
+    <div class="code">
+      <div class="code-bar">
+        <span class="fn">src/index.tsx</span>
+        <span class="tag t2">typed against @app/sdk-types</span>
+      </div>
+      <pre><span class="kw">import</span> <span class="ty">React</span> <span class="kw">from</span> <span class="st">'react'</span><span class="jp">;</span>            <span class="cm">// external → host singleton via __hostRequire__</span>
+<span class="kw">import type</span> <span class="jp">{</span> <span class="ty">ScopedSdk</span><span class="jp">,</span> <span class="ty">ModuleExports</span> <span class="jp">}</span> <span class="kw">from</span> <span class="st">'@app/sdk-types'</span><span class="jp">;</span>
+
+<span class="kw">type</span> <span class="ty">Caps</span> <span class="jp">=</span> <span class="st">'navigation'</span> <span class="jp">|</span> <span class="st">'storage.scoped'</span> <span class="jp">|</span> <span class="st">'events'</span> <span class="jp">|</span> <span class="st">'network'</span> <span class="jp">|</span> <span class="st">'theme'</span><span class="jp">;</span>
+
+<span class="kw">function</span> <span class="fn2">WeatherCard</span><span class="jp">({</span> <span class="id">sdk</span> <span class="jp">}: {</span> <span class="id">sdk</span><span class="jp">:</span> <span class="ty">ScopedSdk</span><span class="jp">&lt;</span><span class="ty">Caps</span><span class="jp">&gt; }) {</span>
+  <span class="cm">// sdk.theme, sdk.storage, sdk.network — only requested groups exist;</span>
+  <span class="cm">// a Proxy throws a descriptive error on anything else (R3).</span>
+  <span class="kw">return</span> <span class="jp">&lt;</span><span class="ty">sdk.ui.Card</span> <span class="id">title</span><span class="jp">=</span><span class="st">"Weather"</span> <span class="jp">/&gt;;</span>
+<span class="jp">}</span>
+
+<span class="kw">function</span> <span class="fn2">WeatherScreen</span><span class="jp">({</span> <span class="id">sdk</span> <span class="jp">}: {</span> <span class="id">sdk</span><span class="jp">:</span> <span class="ty">ScopedSdk</span><span class="jp">&lt;</span><span class="ty">Caps</span><span class="jp">&gt; }) {</span>
+  <span class="kw">return</span> <span class="jp">&lt;</span><span class="ty">sdk.ui.Screen</span> <span class="id">title</span><span class="jp">=</span><span class="st">"Forecast"</span> <span class="jp">/&gt;;</span>
+<span class="jp">}</span>
+
+<span class="cm">// The bundle's ONLY sanctioned top-level side effect (C4).</span>
+<span class="cm">// Anything else — network, timers, globals — fails the P4 probe.</span>
+<span class="id">globalThis</span><span class="jp">.</span><span class="fn2">__registerModule__</span><span class="jp">(</span><span class="st">'weather-widget'</span><span class="jp">,</span> <span class="jp">(</span><span class="id">sdk</span><span class="jp">:</span> <span class="ty">ScopedSdk</span><span class="jp">&lt;</span><span class="ty">Caps</span><span class="jp">&gt;):</span> <span class="ty">ModuleExports</span> <span class="jp">=&gt; ({</span>
+  <span class="id">mounts</span><span class="jp">: {</span>
+    <span class="st">'route:home/weather'</span><span class="jp">: ()</span> <span class="jp">=&gt; &lt;</span><span class="ty">WeatherScreen</span> <span class="id">sdk</span><span class="jp">={</span><span class="id">sdk</span><span class="jp">} /&gt;,</span>
+    <span class="st">'slot:home.cards'</span><span class="jp">:   ()</span> <span class="jp">=&gt; &lt;</span><span class="ty">WeatherCard</span> <span class="id">sdk</span><span class="jp">={</span><span class="id">sdk</span><span class="jp">} /&gt;,</span>
+  <span class="jp">},</span>
+<span class="jp">}));</span></pre>
+    </div>
+  </div>
+
+  <div class="callouts">
+    <div class="co">
+      <h4>Feedback at edit time, not pipeline time</h4>
+      <p>The template's ESLint <code>no-restricted-imports</code> rule allows only <code>@app/sdk</code> plus the
+         pure-JS dependency allowlist (a literal JSON array in the registry repo, Q2). Importing host internals is a
+         red squiggle in the agent's editor — the same config the pipeline runs as P2.</p>
+    </div>
+    <div class="co green">
+      <h4>The contract is the interface</h4>
+      <p><code>tsconfig.json</code> resolves types from <code>@app/sdk-types</code>; <code>host-contract.json</code>
+         (published per host build) pins the exposed mounts and capability groups that P4 validates
+         <code>module.json</code> against. Unknown mounts are a validation failure.</p>
+    </div>
+    <div class="co purple">
+      <h4>One spec, two readers</h4>
+      <p><code>FEATURE_SPEC.md</code> drives the feature agent now — and becomes the ground truth the P5 smoke test
+         drives and the P7 behavioral-review agent verifies recordings against. Freeform markdown in MVP (Q6).</p>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <div class="foot-inner">
+    <span>stage 01 of 05 · agent sandbox · B1 Pragmatic MVP</span>
+    <span><a href="index.html">← overview</a> &nbsp;·&nbsp; next: <a href="02-sandbox.html">02 · Dev loop →</a></span>
+  </div>
+</footer>
+
+</body>
+</html>

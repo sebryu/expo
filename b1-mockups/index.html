@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>B1 · Pragmatic MVP — Pipeline Walkthrough</title>
+<style>
+  :root{
+    --bg:#0a0c10; --bg2:#0d1016; --panel:#11151c; --panel2:#161b24;
+    --line:#222937; --line2:#2e3748;
+    --ink:#e9ecf2; --muted:#8b94a7; --faint:#5b6374;
+    --amber:#ffb454; --amber-dim:rgba(255,180,84,.12);
+    --green:#4cc38a; --red:#f06a5e; --blue:#6cb6ff; --purple:#c89bfa; --cyan:#56d0da;
+    --display:"Futura","Avenir Next Condensed","Trebuchet MS",sans-serif;
+    --body:"Avenir Next","Avenir","Helvetica Neue",sans-serif;
+    --mono:ui-monospace,"SF Mono","Menlo","Cascadia Code",monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg); color:var(--ink); font-family:var(--body);
+    font-size:15px; line-height:1.6; min-height:100vh; position:relative;
+  }
+  body::before{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background:
+      radial-gradient(1100px 480px at 75% -8%, rgba(255,180,84,.075), transparent 60%),
+      radial-gradient(900px 500px at -10% 30%, rgba(108,182,255,.04), transparent 60%),
+      repeating-linear-gradient(0deg, transparent 0 2px, rgba(255,255,255,.012) 2px 3px);
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:0 32px;position:relative;z-index:1}
+
+  /* ---------- header / stage nav ---------- */
+  header.site{
+    border-bottom:1px solid var(--line); position:sticky; top:0; z-index:50;
+    background:rgba(10,12,16,.88); backdrop-filter:blur(10px);
+  }
+  .site-inner{max-width:1180px;margin:0 auto;padding:14px 32px;display:flex;align-items:center;gap:28px;flex-wrap:wrap}
+  .brand{font-family:var(--display);font-size:17px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--ink);text-decoration:none;display:flex;align-items:center;gap:10px;white-space:nowrap}
+  .brand .b1{background:var(--amber);color:#10110c;padding:1px 8px;border-radius:3px;font-weight:700}
+  .brand .sub{color:var(--muted);font-size:12px;letter-spacing:.22em}
+  nav.stages{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+  nav.stages a{
+    font-family:var(--mono);font-size:11.5px;color:var(--muted);text-decoration:none;
+    padding:6px 11px;border:1px solid transparent;border-radius:6px;letter-spacing:.04em;
+    display:flex;align-items:center;gap:7px;transition:all .15s;
+  }
+  nav.stages a b{color:var(--faint);font-weight:600}
+  nav.stages a:hover{color:var(--ink);border-color:var(--line2);background:var(--panel)}
+  nav.stages a[aria-current]{color:var(--amber);border-color:rgba(255,180,84,.35);background:var(--amber-dim)}
+  nav.stages a[aria-current] b{color:var(--amber)}
+
+  /* ---------- hero ---------- */
+  .hero{padding:86px 0 30px}
+  .eyebrow{font-family:var(--mono);font-size:11.5px;letter-spacing:.28em;color:var(--amber);text-transform:uppercase;margin-bottom:22px;display:flex;align-items:center;gap:14px}
+  .eyebrow::after{content:"";height:1px;flex:0 0 90px;background:linear-gradient(90deg,var(--amber),transparent)}
+  h1{font-family:var(--display);font-weight:600;font-size:clamp(44px,6.5vw,76px);line-height:1.02;
+     text-transform:uppercase;letter-spacing:.015em}
+  h1 .dim{color:var(--faint)}
+  h1 .hl{color:var(--amber)}
+  .hero p.lede{max-width:860px;margin-top:30px;color:var(--muted);font-size:16.5px}
+  .hero p.lede strong{color:var(--ink);font-weight:600}
+  .hero p.lede code{font-family:var(--mono);font-size:13.5px;color:var(--cyan);background:var(--panel);border:1px solid var(--line);padding:1px 5px;border-radius:4px}
+
+  /* ---------- journey ---------- */
+  .journey{margin:64px 0 18px}
+  .journey-head{display:flex;align-items:baseline;gap:18px;margin-bottom:24px}
+  h2.sec{font-family:var(--display);font-size:14px;letter-spacing:.3em;text-transform:uppercase;color:var(--ink)}
+  .journey-head .rule{flex:1;height:1px;background:var(--line)}
+  .flow{display:grid;grid-template-columns:repeat(5,1fr);gap:0;counter-reset:stage}
+  .stage-card{
+    position:relative;border:1px solid var(--line);background:linear-gradient(180deg,var(--panel),var(--bg2));
+    padding:26px 20px 22px;text-decoration:none;color:var(--ink);display:block;
+    transition:border-color .18s, transform .18s, background .18s;
+  }
+  .stage-card+.stage-card{margin-left:-1px}
+  .stage-card:first-child{border-radius:10px 0 0 10px}
+  .stage-card:last-child{border-radius:0 10px 10px 0}
+  .stage-card:hover{border-color:var(--amber);transform:translateY(-4px);z-index:2;background:linear-gradient(180deg,var(--panel2),var(--bg2))}
+  .stage-card .num{font-family:var(--display);font-size:34px;color:var(--faint);letter-spacing:.04em;transition:color .18s}
+  .stage-card:hover .num{color:var(--amber)}
+  .stage-card .phase{font-family:var(--mono);font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--amber);margin:14px 0 4px}
+  .stage-card h3{font-family:var(--display);font-size:19px;letter-spacing:.06em;text-transform:uppercase;font-weight:600;margin-bottom:10px}
+  .stage-card ul{list-style:none;margin-top:8px}
+  .stage-card li{font-family:var(--mono);font-size:11.5px;color:var(--muted);padding:3px 0 3px 14px;position:relative}
+  .stage-card li::before{content:"·";position:absolute;left:2px;color:var(--amber)}
+  .stage-card .go{font-family:var(--mono);font-size:11px;color:var(--faint);margin-top:16px;display:block;letter-spacing:.06em}
+  .stage-card:hover .go{color:var(--amber)}
+  .stage-card::after{ /* connector chevron */
+    content:"›";position:absolute;right:-7px;top:42px;z-index:3;color:var(--amber);
+    font-size:22px;line-height:1;font-family:var(--body);
+  }
+  .stage-card:last-child::after{display:none}
+
+  /* ---------- runtime spine ---------- */
+  .spine{margin:70px 0 0;border:1px solid var(--line);border-radius:12px;background:var(--bg2);padding:30px 28px}
+  .spine h2.sec{margin-bottom:6px}
+  .spine .cap{font-size:13.5px;color:var(--muted);margin-bottom:24px;max-width:760px}
+  .chain{display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-family:var(--mono);font-size:12.5px}
+  .chip{border:1px solid var(--line2);background:var(--panel);border-radius:7px;padding:8px 13px;color:var(--ink);white-space:nowrap}
+  .chip small{display:block;color:var(--faint);font-size:10px;letter-spacing:.08em;margin-top:2px}
+  .chip.verify{border-color:rgba(76,195,138,.45)} .chip.verify small{color:var(--green)}
+  .chip.eval{border-color:rgba(200,155,250,.45)} .chip.eval small{color:var(--purple)}
+  .chip.guard{border-color:rgba(240,106,94,.45)} .chip.guard small{color:var(--red)}
+  .arrow{color:var(--amber);font-size:15px}
+  .spine .note{margin-top:22px;font-family:var(--mono);font-size:11.5px;color:var(--faint);line-height:1.8}
+  .spine .note b{color:var(--muted);font-weight:600}
+
+  /* ---------- cast ---------- */
+  .cast{margin:54px 0 0;display:grid;grid-template-columns:1.1fr .9fr;gap:22px}
+  .panel{border:1px solid var(--line);border-radius:12px;background:var(--bg2);padding:26px 28px}
+  .panel h2.sec{margin-bottom:18px}
+  table.cast-t{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12.5px}
+  table.cast-t td{padding:8px 10px;border-top:1px solid var(--line);vertical-align:top}
+  table.cast-t tr:first-child td{border-top:none}
+  table.cast-t td:first-child{color:var(--faint);white-space:nowrap;width:38%}
+  table.cast-t td:last-child{color:var(--ink)}
+  table.cast-t .a{color:var(--amber)} table.cast-t .g{color:var(--green)} table.cast-t .c{color:var(--cyan)}
+  .panel p{color:var(--muted);font-size:13.5px}
+  .panel p+p{margin-top:12px}
+  .panel p code{font-family:var(--mono);font-size:12px;color:var(--cyan)}
+  .badge-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .pill{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);
+    border:1px solid var(--line2);border-radius:99px;padding:4px 12px}
+
+  footer{margin-top:90px;border-top:1px solid var(--line);padding:26px 0 60px}
+  .foot-inner{max-width:1180px;margin:0 auto;padding:0 32px;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;
+    font-family:var(--mono);font-size:11.5px;color:var(--faint)}
+  footer a{color:var(--muted);text-decoration:none}
+  footer a:hover{color:var(--amber)}
+
+  @media (max-width:980px){
+    .flow{grid-template-columns:1fr;gap:14px}
+    .stage-card{border-radius:10px !important;margin-left:0 !important}
+    .stage-card::after{content:"⌄";right:auto;left:24px;top:auto;bottom:-16px}
+    .cast{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="site-inner">
+    <a class="brand" href="index.html"><span class="b1">B1</span> Pragmatic MVP <span class="sub">/ mockups</span></a>
+    <nav class="stages">
+      <a href="01-scaffold.html"><b>01</b> Scaffold</a>
+      <a href="02-sandbox.html"><b>02</b> Dev&nbsp;Loop</a>
+      <a href="03-verification.html"><b>03</b> Verification</a>
+      <a href="04-promotion.html"><b>04</b> Promotion</a>
+      <a href="05-operations.html"><b>05</b> Operations</a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <section class="hero">
+    <div class="eyebrow">Implementation proposal B1 · screen-by-screen walkthrough</div>
+    <h1>Fetch. Verify.<br><span class="hl">Mount.</span> <span class="dim">Kill. Roll&nbsp;back.</span></h1>
+    <p class="lede">
+      <strong>B1 — the Pragmatic MVP</strong> — optimizes for one number: days until the first AI-built module runs on a
+      real device through the full production loading path. There is <strong>no bundler framework and no backend service</strong>:
+      each module is an <code>esbuild</code> single-file bundle evaluated with <code>new Function</code> in the host's shared
+      Hermes runtime, resolving host singletons through <code>__hostRequire__</code>. The registry is a
+      <strong>git repo synced to Cloudflare R2</strong> — the only read API is <code>GET</code>. Publish, kill, and rollback are
+      a ~400-line <code>modctl</code> CLI plus GitHub Actions; <strong>one-click promote is literally clicking Merge</strong> on an
+      auto-generated promotion PR. Every artifact is SHA-256 hashed and <strong>ed25519-signed</strong> against a public key pinned
+      in the binary, and every mount sits behind an error boundary, a 3-strike circuit breaker, and a remote kill flag.
+      Target: <strong>~3 weeks</strong> to end-to-end.
+    </p>
+  </section>
+
+  <section class="journey">
+    <div class="journey-head"><h2 class="sec">The journey of one module</h2><div class="rule"></div></div>
+    <div class="flow">
+      <a class="stage-card" href="01-scaffold.html">
+        <div class="num">01</div>
+        <div class="phase">Agent sandbox</div>
+        <h3>Scaffold</h3>
+        <ul>
+          <li>modctl create weather-widget</li>
+          <li>module-template repo (S1)</li>
+          <li>typed SDK stub + module.json</li>
+          <li>no host-repo credentials (S2)</li>
+        </ul>
+        <span class="go">open mockup →</span>
+      </a>
+      <a class="stage-card" href="02-sandbox.html">
+        <div class="num">02</div>
+        <div class="phase">Agent sandbox</div>
+        <h3>Dev loop</h3>
+        <ul>
+          <li>Tier 1: jest + @app/sdk-mock</li>
+          <li>Tier 2: modctl dev → :8090</li>
+          <li>real dev shell, prod load path</li>
+          <li>argent MCP self-verification</li>
+        </ul>
+        <span class="go">open mockup →</span>
+      </a>
+      <a class="stage-card" href="03-verification.html">
+        <div class="num">03</div>
+        <div class="phase">Verification</div>
+        <h3>Pipeline</h3>
+        <ul>
+          <li>P1–P4 tsc · eslint · jest · validate</li>
+          <li>P5 simulator smoke (argent)</li>
+          <li>P6–P7 AI code + behavior review</li>
+          <li>green → promotion PR opens</li>
+        </ul>
+        <span class="go">open mockup →</span>
+      </a>
+      <a class="stage-card" href="04-promotion.html">
+        <div class="num">04</div>
+        <div class="phase">Promotion</div>
+        <h3>One click</h3>
+        <ul>
+          <li>auto-generated promotion PR (P8)</li>
+          <li>reports + flow recordings embedded</li>
+          <li>Merge = promote</li>
+          <li>publish.yml: sign → R2 (P9)</li>
+        </ul>
+        <span class="go">open mockup →</span>
+      </a>
+      <a class="stage-card" href="05-operations.html">
+        <div class="num">05</div>
+        <div class="phase">Delivery + ops</div>
+        <h3>Operate</h3>
+        <ul>
+          <li>channel manifests on R2 + CDN</li>
+          <li>device: fetch → verify → mount</li>
+          <li>modctl kill / rollback (P10–P11)</li>
+          <li>error-boundary containment</li>
+        </ul>
+        <span class="go">open mockup →</span>
+      </a>
+    </div>
+  </section>
+
+  <section class="spine">
+    <h2 class="sec">The runtime spine</h2>
+    <p class="cap">Every channel — localhost dev registry, staging, production — feeds the same ~500-line loader.
+       What an agent sees in the dev shell is exactly what users get.</p>
+    <div class="chain">
+      <span class="chip">GET channels/&lt;channel&gt;.json<small>foreground + 6h timer</small></span><span class="arrow">→</span>
+      <span class="chip">semver gate<small>requiredSdkVersion · H3</small></span><span class="arrow">→</span>
+      <span class="chip">download /artifacts/&lt;sha256&gt;.js<small>content-addressed · B3</small></span><span class="arrow">→</span>
+      <span class="chip verify">SHA-256 ≡ manifest<small>expo-crypto</small></span><span class="arrow">→</span>
+      <span class="chip verify">ed25519 verify<small>pinned pubkey · prod-2026-01</small></span><span class="arrow">→</span>
+      <span class="chip eval">new Function(bundle)<small>shared Hermes runtime</small></span><span class="arrow">→</span>
+      <span class="chip eval">__registerModule__(id, register)<small>only sanctioned side effect · C4</small></span><span class="arrow">→</span>
+      <span class="chip">register(scopedSdk)<small>capability-scoped object · H2</small></span><span class="arrow">→</span>
+      <span class="chip guard">mount in &lt;ModuleBoundary&gt;<small>boundary + breaker + kill flag</small></span>
+    </div>
+    <div class="note">
+      <b>Externals stay host singletons:</b> a 20-line esbuild plugin rewrites <b>import "react"</b> →
+      <b>globalThis.__hostRequire__("react")</b> — react, react-native, expo-*, and @app/sdk are never bundled twice.
+      &nbsp;·&nbsp; <b>Kill honored within one foreground cycle (H6).</b> &nbsp;·&nbsp; <b>Rollback = repoint the manifest</b> at a previous immutable artifact — no rebuild (P11).
+    </div>
+  </section>
+
+  <section class="cast">
+    <div class="panel">
+      <h2 class="sec">Cast of the walkthrough</h2>
+      <table class="cast-t">
+        <tr><td>Module</td><td><span class="a">weather-widget</span> — repo <span class="c">hearthlabs/weather-widget</span>, from <span class="c">hearthlabs/module-template</span></td></tr>
+        <tr><td>Host app</td><td>“Hearth” (Expo) · HOST_SDK_VERSION <span class="g">1.4.0</span> · dev shell on GitHub Releases</td></tr>
+        <tr><td>Registry</td><td>git repo <span class="c">hearthlabs/registry</span> → R2 bucket <span class="c">modules-registry</span> → <span class="c">https://modules.hearth.app</span></td></tr>
+        <tr><td>Channels</td><td>dev (localhost:8090, unsigned) · staging · production</td></tr>
+        <tr><td>Signing</td><td>ed25519 · key id <span class="a">prod-2026-01</span> · private key only in Actions secrets</td></tr>
+        <tr><td>Versions in play</td><td><span class="g">1.1.0</span> live in production → <span class="a">1.2.0</span> candidate (hourly forecast) → killed &amp; rolled back in the stage-05 drill</td></tr>
+        <tr><td>Smoke testing</td><td>argent MCP on a self-hosted Mac mini runner (boot-device · launch-app · describe · gesture-tap · screenshot)</td></tr>
+      </table>
+    </div>
+    <div class="panel">
+      <h2 class="sec">Why this shape</h2>
+      <p>The unit of AI work equals the unit of shipping, verification, and rollback: <strong style="color:var(--ink)">one module</strong>.
+         Agents work in repos scaffolded from a template with <em>no write access to the host repo</em> — core protection is
+         GitHub permissions, nothing cleverer.</p>
+      <p>Every part is boring and replaceable — GitHub Actions, R2/S3, Sentry, ajv, <code>@noble/ed25519</code>, esbuild,
+         argent MCP. The only durable interface is the contract: <code>manifest</code> + global register function + scoped SDK object.</p>
+      <p>Honest posture: capability scoping in v1 is a build/review-time convention, not a runtime security boundary.
+         The threat model is buggy AI code and a compromised CDN (TLS + hash + signature) — not malicious authors.</p>
+      <div class="badge-row">
+        <span class="pill">no Re.Pack</span><span class="pill">no Metro surgery</span><span class="pill">no backend service</span>
+        <span class="pill">~500-line loader</span><span class="pill">~400-line modctl</span><span class="pill">3-week target</span>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <div class="foot-inner">
+    <span>B1 Pragmatic MVP · mockup series · source: IMPL_REVIEWED_1_PRAGMATIC_MVP.md / REVIEWED_SPEC.md</span>
+    <span>start the journey → <a href="01-scaffold.html">01 · Scaffold</a></span>
+  </div>
+</footer>
+
+</body>
+</html>

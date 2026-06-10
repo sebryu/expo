@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>04 · Promotion — B1 Pragmatic MVP</title>
+<style>
+  :root{
+    --bg:#0a0c10; --bg2:#0d1016; --panel:#11151c; --panel2:#161b24;
+    --line:#222937; --line2:#2e3748;
+    --ink:#e9ecf2; --muted:#8b94a7; --faint:#5b6374;
+    --amber:#ffb454; --amber-dim:rgba(255,180,84,.12);
+    --green:#4cc38a; --green-dim:rgba(76,195,138,.12);
+    --red:#f06a5e; --blue:#6cb6ff; --purple:#c89bfa; --cyan:#56d0da;
+    --display:"Futura","Avenir Next Condensed","Trebuchet MS",sans-serif;
+    --body:"Avenir Next","Avenir","Helvetica Neue",sans-serif;
+    --mono:ui-monospace,"SF Mono","Menlo","Cascadia Code",monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.6}
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+    background:radial-gradient(1100px 480px at 75% -8%, rgba(76,195,138,.05), transparent 60%),
+    repeating-linear-gradient(0deg, transparent 0 2px, rgba(255,255,255,.012) 2px 3px);}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 32px;position:relative;z-index:1}
+
+  header.site{border-bottom:1px solid var(--line);position:sticky;top:0;z-index:50;
+    background:rgba(10,12,16,.88);backdrop-filter:blur(10px)}
+  .site-inner{max-width:1180px;margin:0 auto;padding:14px 32px;display:flex;align-items:center;gap:28px;flex-wrap:wrap}
+  .brand{font-family:var(--display);font-size:17px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink);
+    text-decoration:none;display:flex;align-items:center;gap:10px;white-space:nowrap}
+  .brand .b1{background:var(--amber);color:#10110c;padding:1px 8px;border-radius:3px;font-weight:700}
+  .brand .sub{color:var(--muted);font-size:12px;letter-spacing:.22em}
+  nav.stages{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+  nav.stages a{font-family:var(--mono);font-size:11.5px;color:var(--muted);text-decoration:none;padding:6px 11px;
+    border:1px solid transparent;border-radius:6px;letter-spacing:.04em;display:flex;align-items:center;gap:7px;transition:all .15s}
+  nav.stages a b{color:var(--faint);font-weight:600}
+  nav.stages a:hover{color:var(--ink);border-color:var(--line2);background:var(--panel)}
+  nav.stages a[aria-current]{color:var(--amber);border-color:rgba(255,180,84,.35);background:var(--amber-dim)}
+  nav.stages a[aria-current] b{color:var(--amber)}
+
+  .stagehead{padding:58px 0 14px;display:flex;align-items:flex-end;gap:26px;flex-wrap:wrap}
+  .stagehead .big{font-family:var(--display);font-size:clamp(60px,8vw,96px);line-height:.9;color:var(--amber)}
+  .stagehead h1{font-family:var(--display);font-weight:600;font-size:clamp(28px,3.6vw,42px);text-transform:uppercase;letter-spacing:.04em;line-height:1.05}
+  .stagehead .phase{font-family:var(--mono);font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:var(--amber);margin-bottom:8px}
+  .lede{max-width:860px;color:var(--muted);font-size:15.5px;margin:10px 0 38px}
+  .lede code{font-family:var(--mono);font-size:13px;color:var(--cyan)}
+  .lede strong{color:var(--ink)}
+
+  /* ---------- GitHub-style PR surface ---------- */
+  .gh{border:1px solid var(--line2);border-radius:14px;background:#0c0f15;overflow:hidden;
+    box-shadow:0 30px 70px -34px rgba(0,0,0,.9)}
+  .gh-chrome{display:flex;align-items:center;gap:8px;background:var(--panel2);border-bottom:1px solid var(--line);padding:10px 16px}
+  .dot{width:11px;height:11px;border-radius:50%}
+  .dot.r{background:#ff5f57}.dot.y{background:#febc2e}.dot.g{background:#28c840}
+  .urlbar{flex:1;max-width:560px;margin:0 auto;background:#0a0d12;border:1px solid var(--line);border-radius:6px;
+    font-family:var(--mono);font-size:11px;color:var(--muted);padding:4px 12px;text-align:center}
+  .gh-inner{padding:26px 30px 30px}
+  .gh-crumb{font-family:var(--mono);font-size:13px;color:var(--blue)}
+  .gh-crumb b{color:var(--ink);font-weight:600}
+  .gh-title{font-size:24px;font-weight:600;margin-top:8px;line-height:1.3;font-family:var(--body)}
+  .gh-title .num{color:var(--faint);font-weight:400}
+  .gh-sub{display:flex;align-items:center;gap:10px;margin:12px 0 0;flex-wrap:wrap}
+  .state{display:inline-flex;align-items:center;gap:7px;background:var(--green);color:#08120c;font-weight:700;
+    font-size:13px;border-radius:99px;padding:5px 14px}
+  .state.merged{background:var(--purple);color:#150a22}
+  .gh-sub .who{font-family:var(--mono);font-size:12.5px;color:var(--muted)}
+  .gh-sub .who b{color:var(--ink)}
+  .branch{font-family:var(--mono);font-size:11.5px;background:rgba(108,182,255,.12);color:var(--blue);
+    border-radius:5px;padding:1px 7px}
+  .gh-tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-top:18px}
+  .gh-tab{font-size:13px;color:var(--muted);padding:9px 16px;border:1px solid transparent;border-bottom:none;
+    border-radius:8px 8px 0 0;display:flex;gap:8px;align-items:center}
+  .gh-tab.on{color:var(--ink);background:#0c0f15;border-color:var(--line);position:relative;top:1px}
+  .gh-tab .cnt{font-family:var(--mono);font-size:11px;background:var(--panel2);border-radius:99px;padding:0 8px;color:var(--muted)}
+
+  .gh-cols{display:grid;grid-template-columns:1fr 256px;gap:28px;margin-top:24px}
+
+  /* bot comment */
+  .comment{border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .c-head{background:var(--panel);border-bottom:1px solid var(--line);padding:10px 16px;display:flex;align-items:center;gap:10px;
+    font-size:13px;color:var(--muted)}
+  .avatar{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--amber),#c77b22);
+    display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;color:#171204;font-weight:700;flex:0 0 auto}
+  .avatar.hu{background:linear-gradient(135deg,var(--blue),#2b6cb0);color:#06121f}
+  .c-head b{color:var(--ink)}
+  .bot-tag{font-family:var(--mono);font-size:10px;border:1px solid var(--line2);border-radius:99px;padding:1px 8px;color:var(--faint)}
+  .c-body{padding:20px 22px}
+  .c-body h4{font-size:15px;margin:20px 0 10px;color:var(--ink)}
+  .c-body h4:first-child{margin-top:0}
+  .c-body p{font-size:13.5px;color:var(--muted)}
+  .c-body p code, .c-body li code{font-family:var(--mono);font-size:12px;color:var(--cyan);background:var(--panel);
+    border:1px solid var(--line);border-radius:4px;padding:0 5px}
+  table.meta{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px;margin:8px 0 4px}
+  table.meta td{border:1px solid var(--line);padding:7px 12px}
+  table.meta td:first-child{color:var(--faint);width:34%;background:var(--bg2)}
+  table.meta td:last-child{color:var(--ink)}
+  table.meta .a{color:var(--amber)} table.meta .g{color:var(--green)} table.meta .c{color:var(--cyan)}
+  .verdict-line{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 4px}
+  .vchip{font-family:var(--mono);font-size:11px;border-radius:99px;padding:4px 13px;border:1px solid rgba(76,195,138,.5);
+    color:var(--green);background:var(--green-dim)}
+  .vchip.warn{border-color:rgba(255,180,84,.5);color:var(--amber);background:var(--amber-dim)}
+  ul.brief{list-style:none;margin:8px 0 0}
+  ul.brief li{font-size:13px;color:var(--muted);padding:5px 0 5px 22px;position:relative}
+  ul.brief li::before{content:"✓";position:absolute;left:2px;color:var(--green);font-family:var(--mono);font-size:11px}
+  ul.brief li.m::before{content:"△";color:var(--amber)}
+
+  .evidence{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;margin-top:10px}
+  .evidence figure{width:86px}
+  .evidence svg{display:block;width:100%;height:auto;border-radius:10px;border:1px solid var(--line2);background:#0e1118}
+  .evidence figcaption{font-family:var(--mono);font-size:9px;color:var(--faint);text-align:center;margin-top:5px}
+  .vid{flex:1;min-width:200px;border:1px dashed var(--line2);border-radius:10px;padding:14px 16px;font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+  .vid b{color:var(--ink)} .vid .play{color:var(--green)}
+
+  .diff{border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-top:10px}
+  .diff-head{font-family:var(--mono);font-size:11.5px;color:var(--muted);background:var(--panel);border-bottom:1px solid var(--line);padding:8px 14px}
+  .diff pre{font-family:var(--mono);font-size:11.8px;line-height:1.65;overflow-x:auto;padding:10px 0}
+  .dl{display:block;padding:0 16px;white-space:pre;color:var(--muted)}
+  .dl.add{background:rgba(76,195,138,.09);color:#a7e3c6}
+  .dl.del{background:rgba(240,106,94,.09);color:#f0b0a9}
+  .dl.ctx{color:var(--faint)}
+  .dl .lk{color:var(--blue)}
+
+  /* merge box */
+  .mergebox{border:1px solid var(--line);border-radius:10px;margin-top:22px;overflow:hidden}
+  .checks-ok{padding:14px 18px;border-bottom:1px solid var(--line);background:var(--bg2)}
+  .checks-ok .h{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600}
+  .checks-ok .h .ic{color:var(--green)}
+  .checks-ok .sub{font-size:12.5px;color:var(--faint);margin-left:26px}
+  .checklist{margin-top:10px;border-top:1px solid var(--line)}
+  .checkrow{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:11.8px;color:var(--muted);
+    padding:6px 4px 6px 26px;border-top:1px dashed var(--line)}
+  .checkrow:first-child{border-top:none}
+  .checkrow .ok{color:var(--green)} .checkrow .nm{color:var(--ink)} .checkrow .dur{margin-left:auto;color:var(--faint)}
+  .mergeact{padding:18px;display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap}
+  button.merge{font-family:var(--body);font-size:14.5px;font-weight:700;color:#08120c;background:var(--green);
+    border:none;border-radius:8px;padding:12px 22px;cursor:pointer;display:flex;align-items:center;gap:10px;
+    box-shadow:0 8px 24px -10px rgba(76,195,138,.5)}
+  button.merge:hover{filter:brightness(1.07)}
+  button.merge .k{font-family:var(--mono);font-size:10px;font-weight:400;background:rgba(0,0,0,.18);border-radius:4px;padding:1px 6px}
+  .mergenote{flex:1;min-width:260px;font-size:12.5px;color:var(--faint);line-height:1.7}
+  .mergenote b{color:var(--amber)}
+  .mergenote code{font-family:var(--mono);font-size:11px;color:var(--cyan)}
+
+  /* merged state */
+  .pubterm{display:none;margin-top:0;border-top:1px solid var(--line);background:#0b0e13;padding:16px 20px;
+    font-family:var(--mono);font-size:12px;line-height:1.75;white-space:pre;overflow-x:auto}
+  .pubterm .ok{color:var(--green)} .pubterm .dimm{color:var(--faint)} .pubterm .cy{color:var(--cyan)} .pubterm .wr{color:var(--amber)}
+  .merged .pubterm{display:block}
+  .merged button.merge{display:none}
+  .merged-banner{display:none;margin:0;padding:14px 18px;background:rgba(200,155,250,.1);border-bottom:1px solid rgba(200,155,250,.3);
+    color:var(--purple);font-size:13.5px;font-weight:600}
+  .merged .merged-banner{display:flex;align-items:center;gap:10px}
+  .merged .mergeact .mergenote{display:none}
+  .merged .mergeact{padding:0}
+
+  /* sidebar */
+  .side h6{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);
+    margin:0 0 10px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+  .side section{margin-bottom:24px}
+  .side .item{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--muted);padding:4px 0}
+  .side .item b{color:var(--ink);font-weight:600}
+  .label{display:inline-block;font-family:var(--mono);font-size:10.5px;border-radius:99px;padding:2px 11px;margin:0 6px 6px 0}
+  .label.l1{background:rgba(255,180,84,.15);color:var(--amber);border:1px solid rgba(255,180,84,.4)}
+  .label.l2{background:rgba(108,182,255,.12);color:var(--blue);border:1px solid rgba(108,182,255,.4)}
+  .label.l3{background:rgba(76,195,138,.12);color:var(--green);border:1px solid rgba(76,195,138,.4)}
+  .side p.small{font-size:12px;color:var(--faint);line-height:1.7}
+  .side p.small code{font-family:var(--mono);font-size:10.5px;color:var(--cyan)}
+  .appr{color:var(--green);font-family:var(--mono);font-size:11px}
+
+  footer{margin-top:80px;border-top:1px solid var(--line);padding:26px 0 60px}
+  .foot-inner{max-width:1180px;margin:0 auto;padding:0 32px;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;
+    font-family:var(--mono);font-size:11.5px;color:var(--faint)}
+  footer a{color:var(--muted);text-decoration:none}
+  footer a:hover{color:var(--amber)}
+  @media(max-width:980px){.gh-cols{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="site-inner">
+    <a class="brand" href="index.html"><span class="b1">B1</span> Pragmatic MVP <span class="sub">/ mockups</span></a>
+    <nav class="stages">
+      <a href="01-scaffold.html"><b>01</b> Scaffold</a>
+      <a href="02-sandbox.html"><b>02</b> Dev&nbsp;Loop</a>
+      <a href="03-verification.html"><b>03</b> Verification</a>
+      <a href="04-promotion.html" aria-current="page"><b>04</b> Promotion</a>
+      <a href="05-operations.html"><b>05</b> Operations</a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="stagehead">
+    <div class="big">04</div>
+    <div>
+      <div class="phase">Human gate · P8–P9 · one click</div>
+      <h1>The promote button is a merge button</h1>
+    </div>
+  </div>
+  <p class="lede">
+    A green pipeline auto-opens this PR in the <code>hearthlabs/registry</code> repo. The owner reads the
+    <strong>AI reports and the recorded behavior</strong> — reading code is optional (P8). Clicking
+    <strong>Merge is the one click</strong>: <code>publish.yml</code> fetches the CI artifact, signs it with the ed25519 key
+    (Actions secret, key id <code>prod-2026-01</code>), uploads it to R2, and rewrites the channel manifest. Git is the audit
+    log; reverting the PR is a rollback. <em>Try the merge button below.</em>
+  </p>
+
+  <div class="gh" id="pr">
+    <div class="gh-chrome">
+      <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+      <div class="urlbar">github.com/hearthlabs/registry/pull/214</div>
+    </div>
+    <div class="gh-inner">
+      <div class="gh-crumb">hearthlabs / <b>registry</b></div>
+      <div class="gh-title">Promote weather-widget 1.2.0 → production <span class="num">#214</span></div>
+      <div class="gh-sub">
+        <span class="state" id="stateBadge">⊙ Open</span>
+        <span class="who"><b>hearth-pipeline[bot]</b> wants to merge 1 commit into
+          <span class="branch">production</span> from <span class="branch">promote/weather-widget-1.2.0</span></span>
+      </div>
+      <div class="gh-tabs">
+        <div class="gh-tab on">Conversation <span class="cnt">1</span></div>
+        <div class="gh-tab">Commits <span class="cnt">1</span></div>
+        <div class="gh-tab">Checks <span class="cnt">7</span></div>
+        <div class="gh-tab">Files changed <span class="cnt">1</span></div>
+      </div>
+
+      <div class="gh-cols">
+        <div class="main">
+
+          <div class="comment">
+            <div class="c-head">
+              <span class="avatar">HP</span>
+              <b>hearth-pipeline</b> <span class="bot-tag">bot</span>
+              <span>commented 26 minutes ago · auto-generated by verify.yml run <b>#87</b> (P8)</span>
+            </div>
+            <div class="c-body">
+
+              <h4>Promotion summary</h4>
+              <table class="meta">
+                <tr><td>Module</td><td><span class="a">weather-widget</span> · hearthlabs/weather-widget @ f3e9a21</td></tr>
+                <tr><td>Version</td><td>1.1.0 → <span class="g">1.2.0</span> — hourly forecast + severe-weather banner</td></tr>
+                <tr><td>Channel</td><td>production <span style="color:var(--faint)">(soaked on staging since Jun 7 — owner's per-module choice, Q5)</span></td></tr>
+                <tr><td>Artifact (CI-built)</td><td><span class="c">9f2c41d8a6b3e07f…d9e0f81a</span>.js · 41.7 kB · content-addressed (B3)</td></tr>
+                <tr><td>Signing on merge</td><td>ed25519 · key <span class="a">prod-2026-01</span> · pubkey pinned in host binary (B4/K6)</td></tr>
+                <tr><td>Compatibility</td><td>requiredSdkVersion ^1.0.0 · host SDK <span class="g">1.4.0</span> ✓</td></tr>
+              </table>
+
+              <h4>AI review verdicts</h4>
+              <div class="verdict-line">
+                <span class="vchip">P6 code-review.md — APPROVE · 2 minor findings</span>
+                <span class="vchip">P7 behavior-review.md — PASS · 1 finding</span>
+                <span class="vchip warn">store-compliance checklist (K3) — clear</span>
+              </div>
+              <ul class="brief">
+                <li>Capabilities exactly match usage; storage namespaced; all network via <code>sdk.network</code>.</li>
+                <li>All 3 spec flows + new banner verified against recordings; no error-boundary activity.</li>
+                <li class="m">Minor: duplicated date helper; hardcoded EN banner copy — follow-ups filed, not blocking.</li>
+              </ul>
+
+              <h4>Recorded-flow evidence (P5, mac-mini-01)</h4>
+              <div class="evidence">
+                <figure>
+                  <svg viewBox="0 0 86 168" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="1" y="1" width="84" height="166" rx="10" fill="#0e1118" stroke="#2e3748"/>
+                    <rect x="8" y="14" width="70" height="6" rx="2" fill="#ffb454" opacity=".9"/>
+                    <rect x="8" y="28" width="70" height="42" rx="6" fill="#151a23" stroke="#ffb454" stroke-opacity=".6"/>
+                    <circle cx="20" cy="46" r="5" fill="#ffb454"/>
+                    <text x="32" y="50" font-family="Futura,sans-serif" font-size="11" fill="#e9ecf2">18°</text>
+                    <rect x="8" y="76" width="70" height="28" rx="6" fill="#151a23" stroke="#222937"/>
+                    <rect x="8" y="110" width="70" height="28" rx="6" fill="#151a23" stroke="#222937"/>
+                    <rect x="8" y="148" width="70" height="1" fill="#222937"/>
+                  </svg>
+                  <figcaption>flow-1 home card</figcaption>
+                </figure>
+                <figure>
+                  <svg viewBox="0 0 86 168" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="1" y="1" width="84" height="166" rx="10" fill="#0e1118" stroke="#2e3748"/>
+                    <text x="43" y="20" font-family="Futura,sans-serif" font-size="6.5" fill="#e9ecf2" text-anchor="middle">Forecast</text>
+                    <rect x="8" y="28" width="70" height="14" rx="4" fill="#151a23" stroke="#222937"/>
+                    <rect x="8" y="46" width="70" height="14" rx="4" fill="#151a23" stroke="#222937"/>
+                    <rect x="8" y="64" width="70" height="14" rx="4" fill="#151a23" stroke="#222937"/>
+                    <rect x="8" y="82" width="70" height="14" rx="4" fill="#151a23" stroke="#222937"/>
+                    <rect x="8" y="100" width="70" height="14" rx="4" fill="#151a23" stroke="#222937"/>
+                    <rect x="8" y="118" width="70" height="14" rx="4" fill="#151a23" stroke="#222937"/>
+                  </svg>
+                  <figcaption>flow-2 forecast</figcaption>
+                </figure>
+                <figure>
+                  <svg viewBox="0 0 86 168" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="1" y="1" width="84" height="166" rx="10" fill="#0e1118" stroke="#2e3748"/>
+                    <text x="43" y="20" font-family="Futura,sans-serif" font-size="6.5" fill="#e9ecf2" text-anchor="middle">Forecast</text>
+                    <rect x="8" y="28" width="70" height="20" rx="5" fill="rgba(240,106,94,.14)" stroke="#f06a5e"/>
+                    <text x="14" y="40" font-family="Menlo,monospace" font-size="4.6" fill="#f06a5e">⚠ SEVERE</text>
+                    <rect x="8" y="56" width="70" height="14" rx="4" fill="#151a23" stroke="#222937"/>
+                    <rect x="8" y="74" width="70" height="14" rx="4" fill="#151a23" stroke="#222937"/>
+                    <rect x="8" y="92" width="70" height="14" rx="4" fill="#151a23" stroke="#222937"/>
+                    <rect x="8" y="110" width="70" height="14" rx="4" fill="#151a23" stroke="#222937"/>
+                  </svg>
+                  <figcaption>banner state</figcaption>
+                </figure>
+                <div class="vid">
+                  <span class="play">▶</span> <b>flow-recording.mp4</b> · 1:42 · 11 screenshots · argent step log<br><br>
+                  artifacts of verify.yml run #87 — crash / boundary trip / failed step would have blocked this PR from opening.
+                </div>
+              </div>
+
+              <h4>Manifest change — <span style="font-family:var(--mono);font-size:13px">channels/production.json</span></h4>
+              <div class="diff">
+                <div class="diff-head">channels/production.json &nbsp;·&nbsp; +4 −4</div>
+                <pre><span class="dl ctx">   "modules": [</span>
+<span class="dl ctx">     {</span>
+<span class="dl ctx">       "id": "weather-widget",</span>
+<span class="dl del">-      "version": "1.1.0",</span>
+<span class="dl add">+      "version": "1.2.0",</span>
+<span class="dl ctx">       "entryPoint": "index", "killed": false,</span>
+<span class="dl ctx">       "requiredSdkVersion": "^1.0.0",</span>
+<span class="dl ctx">       "capabilities": ["navigation", "storage.scoped", "events", "network", "theme"],</span>
+<span class="dl del">-      "mounts": ["route:home/weather", "slot:home.cards"],</span>
+<span class="dl add">+      "mounts": ["route:home/weather", "slot:home.cards"],   <span class="lk">// unchanged — re-validated vs host-contract.json</span></span>
+<span class="dl ctx">       "artifact": {</span>
+<span class="dl del">-        "url": "https://modules.hearth.app/artifacts/4b7de2a91c6f50e8…d8c1b04e.js",</span>
+<span class="dl del">-        "sha256": "4b7de2a91c6f50e8…d8c1b04e",</span>
+<span class="dl add">+        "url": "https://modules.hearth.app/artifacts/9f2c41d8a6b3e07f…d9e0f81a.js",</span>
+<span class="dl add">+        "sha256": "9f2c41d8a6b3e07f…d9e0f81a",</span>
+<span class="dl ctx">         "signature": "&lt;set by publish.yml after ed25519 signing&gt;",</span>
+<span class="dl ctx">         "keyId": "prod-2026-01" },</span>
+<span class="dl ctx">       "rollout": null, "cohorts": null }]</span></pre>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- merge box -->
+          <div class="mergebox" id="mergebox">
+            <div class="merged-banner">⌥ Merged — promote/weather-widget-1.2.0 → production · publish.yml running</div>
+            <div class="checks-ok">
+              <div class="h"><span class="ic">✔</span> All checks have passed</div>
+              <div class="sub">7 successful checks · verify.yml run #87</div>
+              <div class="checklist">
+                <div class="checkrow"><span class="ok">✓</span><span class="nm">P1 · typecheck (tsc --noEmit)</span><span class="dur">14s</span></div>
+                <div class="checkrow"><span class="ok">✓</span><span class="nm">P2 · eslint + import boundary</span><span class="dur">9s</span></div>
+                <div class="checkrow"><span class="ok">✓</span><span class="nm">P3 · jest (Tier 1) — 34 passed</span><span class="dur">21s</span></div>
+                <div class="checkrow"><span class="ok">✓</span><span class="nm">P4 · modctl validate (schema · capabilities · allowlist · side-effect probe)</span><span class="dur">33s</span></div>
+                <div class="checkrow"><span class="ok">✓</span><span class="nm">P5 · simulator smoke — argent @ mac-mini-01</span><span class="dur">4m12s</span></div>
+                <div class="checkrow"><span class="ok">✓</span><span class="nm">P6 · AI code review — APPROVE</span><span class="dur">1m38s</span></div>
+                <div class="checkrow"><span class="ok">✓</span><span class="nm">P7 · AI behavioral review — PASS</span><span class="dur">2m07s</span></div>
+              </div>
+            </div>
+            <div class="mergeact">
+              <button class="merge" id="mergeBtn" type="button">
+                Merge pull request <span class="k">= one-click promote (P8)</span>
+              </button>
+              <div class="mergenote">
+                Merging triggers <b>publish.yml</b> (P9): fetch CI artifact from run #87 → verify sha-256 → sign with
+                <code>ed25519</code> key <code>prod-2026-01</code> → upload <code>/artifacts/9f2c41d8….js</code> to R2 bucket
+                <code>modules-registry</code> → rewrite <code>channels/production.json</code>. Devices pick it up on next
+                foreground refresh.
+              </div>
+            </div>
+            <div class="pubterm" id="pubterm"><span class="dimm"># publish.yml — triggered by merge of #214</span>
+<span class="ok">✔</span> fetched CI artifact <span class="cy">weather-widget-1.2.0.js</span> <span class="dimm">(verify.yml run #87 · 41.7 kB)</span>
+<span class="ok">✔</span> sha256 re-verified <span class="cy">9f2c41d8a6b3e07f…d9e0f81a</span> <span class="dimm">≡ manifest</span>
+<span class="ok">✔</span> signed with ed25519 <span class="dimm">(@noble/ed25519 · key prod-2026-01 · private key: Actions secret only)</span>
+<span class="ok">✔</span> uploaded r2://modules-registry/artifacts/9f2c41d8…d9e0f81a.js <span class="dimm">immutable · content-addressed</span>
+<span class="ok">✔</span> rewrote r2://modules-registry/channels/production.json <span class="dimm">+ signature · updatedAt 2026-06-09T12:41:08Z</span>
+<span class="ok">✔</span> CDN cache purged <span class="dimm">https://modules.hearth.app/channels/production.json</span>
+
+<span class="wr">weather-widget 1.2.0 is live on production.</span> <span class="dimm">Next: stage 05 — delivery & operations.</span></div>
+          </div>
+
+        </div>
+
+        <!-- sidebar -->
+        <aside class="side">
+          <section>
+            <h6>Reviewers</h6>
+            <div class="item"><span class="avatar hu">SR</span><div><b>sebryu</b> (owner)<br><span class="appr">✓ approved from reports</span></div></div>
+          </section>
+          <section>
+            <h6>Labels</h6>
+            <span class="label l1">promotion</span>
+            <span class="label l2">module: weather-widget</span>
+            <span class="label l3">channel: production</span>
+          </section>
+          <section>
+            <h6>About this PR</h6>
+            <p class="small">Auto-opened by <code>verify.yml</code> run #87 on green (P8). The registry git repo is the source
+              of truth; merge history doubles as the promotion audit log. Reverting this PR re-points production at
+              <code>1.1.0</code> — that is also what <code>modctl rollback</code> does.</p>
+          </section>
+          <section>
+            <h6>Owner reads</h6>
+            <p class="small">code-review.md · behavior-review.md · flow-recording.mp4. Code review is optional by design (G3/P8).</p>
+          </section>
+        </aside>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <div class="foot-inner">
+    <span>stage 04 of 05 · promotion · B1 Pragmatic MVP</span>
+    <span><a href="03-verification.html">← 03 · Verification</a> &nbsp;·&nbsp; next: <a href="05-operations.html">05 · Operations →</a></span>
+  </div>
+</footer>
+
+<script>
+  const btn = document.getElementById('mergeBtn');
+  const box = document.getElementById('mergebox');
+  const badge = document.getElementById('stateBadge');
+  btn.addEventListener('click', () => {
+    box.classList.add('merged');
+    document.getElementById('pr').classList.add('merged');
+    badge.textContent = '⌥ Merged';
+    badge.classList.add('merged');
+    document.getElementById('pubterm').scrollIntoView({behavior:'smooth', block:'center'});
+  });
+</script>
+
+</body>
+</html>

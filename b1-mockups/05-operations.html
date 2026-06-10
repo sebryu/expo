@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>05 · Operations — B1 Pragmatic MVP</title>
+<style>
+  :root{
+    --bg:#0a0c10; --bg2:#0d1016; --panel:#11151c; --panel2:#161b24;
+    --line:#222937; --line2:#2e3748;
+    --ink:#e9ecf2; --muted:#8b94a7; --faint:#5b6374;
+    --amber:#ffb454; --amber-dim:rgba(255,180,84,.12);
+    --green:#4cc38a; --green-dim:rgba(76,195,138,.1);
+    --red:#f06a5e; --red-dim:rgba(240,106,94,.1);
+    --blue:#6cb6ff; --purple:#c89bfa; --cyan:#56d0da;
+    --display:"Futura","Avenir Next Condensed","Trebuchet MS",sans-serif;
+    --body:"Avenir Next","Avenir","Helvetica Neue",sans-serif;
+    --mono:ui-monospace,"SF Mono","Menlo","Cascadia Code",monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.6}
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+    background:radial-gradient(1100px 480px at 75% -8%, rgba(240,106,94,.05), transparent 60%),
+    repeating-linear-gradient(0deg, transparent 0 2px, rgba(255,255,255,.012) 2px 3px);}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 32px;position:relative;z-index:1}
+
+  header.site{border-bottom:1px solid var(--line);position:sticky;top:0;z-index:50;
+    background:rgba(10,12,16,.88);backdrop-filter:blur(10px)}
+  .site-inner{max-width:1180px;margin:0 auto;padding:14px 32px;display:flex;align-items:center;gap:28px;flex-wrap:wrap}
+  .brand{font-family:var(--display);font-size:17px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink);
+    text-decoration:none;display:flex;align-items:center;gap:10px;white-space:nowrap}
+  .brand .b1{background:var(--amber);color:#10110c;padding:1px 8px;border-radius:3px;font-weight:700}
+  .brand .sub{color:var(--muted);font-size:12px;letter-spacing:.22em}
+  nav.stages{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+  nav.stages a{font-family:var(--mono);font-size:11.5px;color:var(--muted);text-decoration:none;padding:6px 11px;
+    border:1px solid transparent;border-radius:6px;letter-spacing:.04em;display:flex;align-items:center;gap:7px;transition:all .15s}
+  nav.stages a b{color:var(--faint);font-weight:600}
+  nav.stages a:hover{color:var(--ink);border-color:var(--line2);background:var(--panel)}
+  nav.stages a[aria-current]{color:var(--amber);border-color:rgba(255,180,84,.35);background:var(--amber-dim)}
+  nav.stages a[aria-current] b{color:var(--amber)}
+
+  .stagehead{padding:58px 0 14px;display:flex;align-items:flex-end;gap:26px;flex-wrap:wrap}
+  .stagehead .big{font-family:var(--display);font-size:clamp(60px,8vw,96px);line-height:.9;color:var(--amber)}
+  .stagehead h1{font-family:var(--display);font-weight:600;font-size:clamp(28px,3.6vw,42px);text-transform:uppercase;letter-spacing:.04em;line-height:1.05}
+  .stagehead .phase{font-family:var(--mono);font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:var(--amber);margin-bottom:8px}
+  .lede{max-width:880px;color:var(--muted);font-size:15.5px;margin:10px 0 40px}
+  .lede code{font-family:var(--mono);font-size:13px;color:var(--cyan)}
+  .lede strong{color:var(--ink)}
+
+  h2.sec{font-family:var(--display);font-size:14px;letter-spacing:.3em;text-transform:uppercase;color:var(--ink);margin:56px 0 8px;
+    display:flex;align-items:center;gap:16px}
+  h2.sec::after{content:"";flex:1;height:1px;background:var(--line)}
+  .seccap{font-size:13.5px;color:var(--muted);max-width:780px;margin-bottom:22px}
+  .seccap code{font-family:var(--mono);font-size:12px;color:var(--cyan)}
+
+  /* ---- R2 ---- */
+  .r2{display:grid;grid-template-columns:340px 1fr;gap:22px;align-items:start}
+  .bucket{border:1px solid var(--line);border-radius:11px;background:var(--bg2);overflow:hidden}
+  .bucket-head{background:var(--panel);border-bottom:1px solid var(--line);padding:11px 16px;
+    font-family:var(--mono);font-size:12px;color:var(--ink);display:flex;align-items:center;gap:9px}
+  .bucket-head .cf{width:18px;height:12px;border-radius:6px 6px 0 0;background:var(--amber);position:relative;top:1px}
+  .bucket-head small{color:var(--faint);margin-left:auto;font-size:10px}
+  .obj{display:flex;align-items:baseline;gap:10px;padding:9px 16px;border-top:1px solid var(--line);
+    font-family:var(--mono);font-size:11.6px;color:var(--muted)}
+  .obj:first-of-type{border-top:none}
+  .obj .ic{color:var(--faint);font-size:11px}
+  .obj b{color:var(--ink);font-weight:500}
+  .obj .sz{margin-left:auto;color:var(--faint);font-size:10.5px;white-space:nowrap}
+  .obj.hl b{color:var(--amber)}
+  .obj .tagm{font-size:9px;color:var(--faint)}
+  .bucket-foot{padding:10px 16px;border-top:1px solid var(--line);font-family:var(--mono);font-size:10.5px;color:var(--faint);line-height:1.7}
+  .bucket-foot b{color:var(--muted)}
+
+  .jsonview{border:1px solid var(--line);border-radius:11px;background:#0b0e13;overflow:hidden}
+  .json-head{background:var(--panel);border-bottom:1px solid var(--line);padding:10px 16px;display:flex;align-items:center;gap:12px;
+    font-family:var(--mono);font-size:12px;color:var(--ink)}
+  .json-head .url{color:var(--cyan);font-size:11px}
+  .json-head .live{margin-left:auto;font-size:10px;letter-spacing:.14em;color:var(--green);border:1px solid rgba(76,195,138,.5);
+    border-radius:99px;padding:2px 10px}
+  .jsonview pre{padding:16px 20px;font-family:var(--mono);font-size:11.9px;line-height:1.66;overflow-x:auto;color:var(--faint)}
+  .jk{color:var(--blue)} .js{color:var(--green)} .jn{color:var(--amber)} .jb{color:var(--red)} .jnu{color:var(--purple)} .jc{color:var(--faint)}
+
+  .gapnote{margin-top:18px;border:1px dashed rgba(240,106,94,.45);border-radius:10px;background:var(--red-dim);padding:14px 18px;
+    font-size:12.8px;color:var(--muted)}
+  .gapnote b{color:var(--red)} .gapnote code{font-family:var(--mono);font-size:11.5px;color:var(--cyan)}
+
+  /* ---- device timeline ---- */
+  .timeline{border:1px solid var(--line);border-radius:11px;background:var(--bg2);padding:8px 0}
+  .tl-row{display:grid;grid-template-columns:120px 26px 1fr auto;gap:0 14px;align-items:start;padding:9px 24px}
+  .tl-row .t{font-family:var(--mono);font-size:10.8px;color:var(--faint);padding-top:2px;text-align:right}
+  .tl-row .nd{position:relative;display:flex;justify-content:center}
+  .tl-row .nd::before{content:"";position:absolute;top:18px;bottom:-18px;width:1px;background:var(--line2);left:50%}
+  .tl-row:last-child .nd::before{display:none}
+  .tl-dot{width:11px;height:11px;border-radius:50%;background:var(--panel);border:2px solid var(--faint);position:relative;z-index:1;margin-top:4px}
+  .tl-dot.g{border-color:var(--green)} .tl-dot.a{border-color:var(--amber)} .tl-dot.p{border-color:var(--purple)} .tl-dot.c{border-color:var(--cyan)}
+  .tl-row .what{font-family:var(--mono);font-size:12.3px;color:var(--ink)}
+  .tl-row .what small{display:block;color:var(--faint);font-size:11px;margin-top:1px;line-height:1.6}
+  .tl-row .ms{font-family:var(--mono);font-size:10.5px;color:var(--faint);white-space:nowrap;padding-top:3px}
+  .tl-row .ok{color:var(--green)} .tl-row .cy{color:var(--cyan)} .tl-row .am{color:var(--amber)}
+
+  /* ---- incident ---- */
+  .stepperbar{display:flex;gap:10px;margin:0 0 24px;flex-wrap:wrap}
+  .stepbtn{font-family:var(--mono);font-size:12px;color:var(--muted);background:var(--bg2);border:1px solid var(--line2);
+    border-radius:99px;padding:9px 20px;cursor:pointer;display:flex;align-items:center;gap:9px;transition:all .15s}
+  .stepbtn b{color:var(--faint)}
+  .stepbtn:hover{color:var(--ink);border-color:var(--muted)}
+  .stepbtn.on{color:var(--amber);border-color:rgba(255,180,84,.55);background:var(--amber-dim)}
+  .stepbtn.on b{color:var(--amber)}
+  .step-panel{display:none}
+  .step-panel.on{display:grid;grid-template-columns:1fr 340px;gap:28px;align-items:start;animation:fadein .3s}
+  @keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  /* sentry card */
+  .sentry{border:1px solid rgba(240,106,94,.5);border-radius:11px;background:var(--bg2);overflow:hidden;margin-bottom:20px}
+  .sentry-head{background:var(--red-dim);border-bottom:1px solid rgba(240,106,94,.4);padding:12px 18px;display:flex;align-items:center;gap:12px}
+  .sentry-head .lvl{font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;background:var(--red);color:#1d0907;
+    border-radius:4px;padding:2px 8px;font-weight:700}
+  .sentry-head .nm{font-family:var(--mono);font-size:13px;color:var(--ink)}
+  .sentry-head .cnt{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--red)}
+  .sentry-body{padding:14px 18px;font-family:var(--mono);font-size:11.8px;color:var(--muted);line-height:1.8}
+  .sentry-body .tag{display:inline-block;border:1px solid var(--line2);border-radius:99px;padding:1px 10px;margin:0 6px 6px 0;
+    font-size:10.5px;color:var(--cyan)}
+  .sentry-body .tag b{color:var(--ink);font-weight:500}
+  .sentry-body em{color:var(--faint);font-style:normal}
+  .spark{display:flex;align-items:flex-end;gap:2px;height:30px;margin:8px 0 2px}
+  .spark i{width:7px;background:rgba(240,106,94,.7);border-radius:2px 2px 0 0;display:block}
+
+  /* terminal */
+  .term{border:1px solid var(--line2);border-radius:11px;background:#0b0e13;overflow:hidden;
+    box-shadow:0 22px 50px -28px rgba(0,0,0,.85)}
+  .term+.term{margin-top:18px}
+  .term-bar{display:flex;align-items:center;gap:8px;background:var(--panel2);border-bottom:1px solid var(--line);padding:9px 14px}
+  .dot{width:11px;height:11px;border-radius:50%}
+  .dot.r{background:#ff5f57}.dot.y{background:#febc2e}.dot.g{background:#28c840}
+  .term-title{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-left:10px}
+  .term-body{padding:15px 18px;font-family:var(--mono);font-size:12.2px;line-height:1.72;overflow-x:auto;white-space:pre}
+  .p{color:var(--green)} .cmd{color:var(--ink);font-weight:600} .fl{color:var(--muted)}
+  .ok{color:var(--green)} .inf{color:var(--blue)} .wr{color:var(--amber)} .dimm{color:var(--faint)} .cy2{color:var(--cyan)} .er{color:var(--red)}
+
+  .mdiff{border:1px solid var(--line);border-radius:9px;overflow:hidden;margin-top:16px}
+  .mdiff .h{font-family:var(--mono);font-size:11px;color:var(--muted);background:var(--panel);border-bottom:1px solid var(--line);padding:7px 14px}
+  .mdiff pre{font-family:var(--mono);font-size:11.5px;line-height:1.65;padding:8px 0;overflow-x:auto}
+  .dl{display:block;padding:0 16px;white-space:pre;color:var(--faint)}
+  .dl.add{background:rgba(76,195,138,.09);color:#a7e3c6}
+  .dl.del{background:rgba(240,106,94,.09);color:#f0b0a9}
+
+  /* phone */
+  .phone{width:300px;border-radius:46px;border:1px solid #2c3445;background:#05070a;padding:10px;
+    box-shadow:0 30px 70px -30px rgba(0,0,0,.9), inset 0 0 0 2px #11141b;margin:0 auto}
+  .screen{border-radius:37px;overflow:hidden;background:#0e1118;height:560px;position:relative;display:flex;flex-direction:column}
+  .island{position:absolute;top:9px;left:50%;transform:translateX(-50%);width:92px;height:24px;border-radius:13px;background:#000;z-index:5}
+  .statusbar{display:flex;justify-content:space-between;padding:13px 24px 4px;font-family:var(--mono);font-size:11px;color:var(--ink)}
+  .appbody{flex:1;padding:12px 15px 0;overflow:hidden;position:relative}
+  .apphead{margin:4px 2px 12px}
+  .apphead .date{font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint)}
+  .apphead h3{font-family:var(--display);font-size:22px;letter-spacing:.03em;margin-top:2px}
+  .card{border:1px solid var(--line);border-radius:15px;background:linear-gradient(165deg,#151a23,#10141c);padding:13px 14px;margin-bottom:11px;position:relative}
+  .card .ct{font-family:var(--mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--faint);margin-bottom:6px}
+  .card .row{display:flex;align-items:center;gap:11px}
+  .card.weather{border-color:rgba(255,180,84,.55)}
+  .temp{font-family:var(--display);font-size:32px;line-height:1;color:var(--ink)}
+  .cond{font-size:11.5px;color:var(--muted)}
+  .cond b{color:var(--ink);font-weight:600;display:block;font-size:12.5px}
+  .modbadge{position:absolute;top:-9px;right:12px;background:#171204;border:1px solid rgba(255,180,84,.6);color:var(--amber);
+    font-family:var(--mono);font-size:8.4px;letter-spacing:.06em;border-radius:99px;padding:2px 8px}
+  .pettxt{font-size:11.5px;color:var(--muted)} .pettxt b{color:var(--ink);display:block;font-size:12.5px}
+  .tabbar{border-top:1px solid var(--line);display:flex;justify-content:space-around;padding:10px 0 20px;background:#0b0e14}
+  .tab{font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:var(--faint);text-align:center}
+  .tab.on{color:var(--amber)} .tab .ic{font-size:14px;display:block;margin-bottom:2px}
+  .navbar{display:flex;align-items:center;gap:10px;padding:6px 4px 10px;font-family:var(--mono);font-size:11px;color:var(--amber)}
+  .navbar .ttl{color:var(--ink);font-family:var(--display);font-size:15px;letter-spacing:.04em;margin:0 auto;padding-right:22px}
+  .fallback{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 26px}
+  .fallback .icn{width:54px;height:54px;border-radius:50%;border:1.5px solid var(--red);color:var(--red);
+    display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:16px;background:var(--red-dim)}
+  .fallback h4{font-family:var(--display);font-size:17px;letter-spacing:.04em;margin-bottom:8px}
+  .fallback p{font-size:12px;color:var(--muted);line-height:1.7}
+  .fallback .btn{margin-top:18px;font-family:var(--mono);font-size:11px;color:#171204;background:var(--amber);
+    border-radius:8px;padding:8px 20px;font-weight:700}
+  .fallback .meta{margin-top:20px;font-family:var(--mono);font-size:9px;color:var(--faint);line-height:1.8}
+  .toast{position:absolute;left:18px;right:18px;bottom:14px;background:#171b24;border:1px solid var(--line2);border-radius:11px;
+    padding:9px 13px;font-family:var(--mono);font-size:9.6px;color:var(--muted);z-index:4}
+  .toast b{color:var(--green)}
+  .phone-cap{font-family:var(--mono);font-size:10.5px;color:var(--faint);text-align:center;margin-top:12px;line-height:1.7}
+  .phone-cap b{color:var(--muted)}
+
+  footer{margin-top:90px;border-top:1px solid var(--line);padding:26px 0 60px}
+  .foot-inner{max-width:1180px;margin:0 auto;padding:0 32px;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;
+    font-family:var(--mono);font-size:11.5px;color:var(--faint)}
+  footer a{color:var(--muted);text-decoration:none}
+  footer a:hover{color:var(--amber)}
+  @media(max-width:1000px){.r2{grid-template-columns:1fr}.step-panel.on{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="site-inner">
+    <a class="brand" href="index.html"><span class="b1">B1</span> Pragmatic MVP <span class="sub">/ mockups</span></a>
+    <nav class="stages">
+      <a href="01-scaffold.html"><b>01</b> Scaffold</a>
+      <a href="02-sandbox.html"><b>02</b> Dev&nbsp;Loop</a>
+      <a href="03-verification.html"><b>03</b> Verification</a>
+      <a href="04-promotion.html"><b>04</b> Promotion</a>
+      <a href="05-operations.html" aria-current="page"><b>05</b> Operations</a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="stagehead">
+    <div class="big">05</div>
+    <div>
+      <div class="phase">Delivery + operations · P10–P12 · H5/H6</div>
+      <h1>Live — and on a leash</h1>
+    </div>
+  </div>
+  <p class="lede">
+    Production is <strong>static JSON on Cloudflare R2 behind a CDN — the only API is GET</strong>. Devices refresh the
+    channel manifest on foreground (and a 6-hour timer) and pull artifacts lazily through hash + signature verification.
+    When a module misbehaves, containment is layered: the <strong>error boundary</strong> catches it on-device, the
+    <strong>circuit breaker</strong> stops retries after 3 strikes, and <code>modctl kill</code> removes it from every user
+    within one foreground cycle. <strong>Rollback is repointing the manifest</strong> at a previous immutable artifact — no rebuild.
+  </p>
+
+  <!-- ============ R2 ============ -->
+  <h2 class="sec">The registry is a bucket</h2>
+  <p class="seccap">Source of truth is the <code>hearthlabs/registry</code> git repo; <code>publish.yml</code> syncs merged
+     manifests to R2. Artifacts are immutable and content-addressed (B3) — “versions” exist only in manifests.</p>
+
+  <div class="r2">
+    <div class="bucket">
+      <div class="bucket-head"><span class="cf"></span> r2://modules-registry <small>Cloudflare R2 · public read via CDN</small></div>
+      <div class="obj"><span class="ic">▸</span><b>channels/production.json</b><span class="sz">2.1 kB · 12:41</span></div>
+      <div class="obj"><span class="ic">▸</span><b>channels/staging.json</b><span class="sz">2.2 kB · Jun 7</span></div>
+      <div class="obj"><span class="ic">▸</span><b>channels/dev.json</b><span class="sz">0.8 kB</span></div>
+      <div class="obj hl"><span class="ic">⬡</span><b>artifacts/9f2c41d8…d9e0f81a.js</b><span class="tagm">weather-widget 1.2.0</span><span class="sz">41.7 kB</span></div>
+      <div class="obj"><span class="ic">⬡</span><b>artifacts/4b7de2a9…d8c1b04e.js</b><span class="tagm">weather-widget 1.1.0</span><span class="sz">39.0 kB</span></div>
+      <div class="obj"><span class="ic">⬡</span><b>artifacts/c81f3a5d…8d0e1f37.js</b><span class="tagm">pet-tracker 1.1.0</span><span class="sz">47.3 kB</span></div>
+      <div class="bucket-foot">
+        <b>writes:</b> publish.yml (Actions secrets) + modctl on owner's machine — nothing else holds R2 credentials.<br>
+        <b>reads:</b> plain HTTPS GET over TLS (K4). single-tenant, one bucket (B6). S3+CloudFront is a drop-in substitute.
+      </div>
+    </div>
+
+    <div>
+      <div class="jsonview">
+        <div class="json-head">GET <span class="url">https://modules.hearth.app/channels/production.json</span><span class="live">● LIVE</span></div>
+        <pre>{
+  <span class="jk">"schemaVersion"</span>: <span class="jn">1</span>,
+  <span class="jk">"updatedAt"</span>: <span class="js">"2026-06-09T12:41:08Z"</span>,
+  <span class="jk">"modules"</span>: [
+    { <span class="jk">"id"</span>: <span class="js">"weather-widget"</span>, <span class="jk">"version"</span>: <span class="js">"1.2.0"</span>,
+      <span class="jk">"entryPoint"</span>: <span class="js">"index"</span>, <span class="jk">"killed"</span>: <span class="jb">false</span>,
+      <span class="jk">"requiredSdkVersion"</span>: <span class="js">"^1.0.0"</span>,
+      <span class="jk">"capabilities"</span>: [<span class="js">"navigation"</span>, <span class="js">"storage.scoped"</span>, <span class="js">"events"</span>, <span class="js">"network"</span>, <span class="js">"theme"</span>],
+      <span class="jk">"mounts"</span>: [<span class="js">"route:home/weather"</span>, <span class="js">"slot:home.cards"</span>],
+      <span class="jk">"artifact"</span>: {
+        <span class="jk">"url"</span>: <span class="js">"https://modules.hearth.app/artifacts/9f2c41d8a6b3e07f…d9e0f81a.js"</span>,
+        <span class="jk">"sha256"</span>: <span class="js">"9f2c41d8a6b3e07f…d9e0f81a"</span>,
+        <span class="jk">"signature"</span>: <span class="js">"o3K9hQz1Vt8mWxYpL2Nc…SlK4T6m1N8Rw=="</span>,
+        <span class="jk">"keyId"</span>: <span class="js">"prod-2026-01"</span> },
+      <span class="jk">"rollout"</span>: <span class="jnu">null</span>, <span class="jk">"cohorts"</span>: <span class="jnu">null</span> },          <span class="jc">// reserved (B5/N6)</span>
+
+    { <span class="jk">"id"</span>: <span class="js">"pet-tracker"</span>, <span class="jk">"version"</span>: <span class="js">"1.1.0"</span>,
+      <span class="jk">"entryPoint"</span>: <span class="js">"index"</span>, <span class="jk">"killed"</span>: <span class="jb">false</span>,
+      <span class="jk">"requiredSdkVersion"</span>: <span class="js">"^1.0.0"</span>,
+      <span class="jk">"capabilities"</span>: [<span class="js">"navigation"</span>, <span class="js">"storage.scoped"</span>, <span class="js">"events"</span>],
+      <span class="jk">"mounts"</span>: [<span class="js">"route:home/pet-tracker"</span>, <span class="js">"slot:home.cards"</span>],
+      <span class="jk">"artifact"</span>: {
+        <span class="jk">"url"</span>: <span class="js">"https://modules.hearth.app/artifacts/c81f3a5d97b2e406…8d0e1f37.js"</span>,
+        <span class="jk">"sha256"</span>: <span class="js">"c81f3a5d97b2e406…8d0e1f37"</span>,
+        <span class="jk">"signature"</span>: <span class="js">"u7Rd2xPa0qLmYs4T…cVb9NwEi3A=="</span>,
+        <span class="jk">"keyId"</span>: <span class="js">"prod-2026-01"</span> },
+      <span class="jk">"rollout"</span>: <span class="jnu">null</span>, <span class="jk">"cohorts"</span>: <span class="jnu">null</span> } ]
+}</pre>
+      </div>
+      <div class="gapnote">
+        <b>Documented MVP gap (§7):</b> the manifest itself is TLS-protected but <b>unsigned</b> — a CDN-level attacker could
+        flip kill flags or hide modules (availability only; code injection stays blocked because artifacts are ed25519-signed
+        against the pinned pubkey). <code>manifest signing</code> is the first Phase-2 line item.
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ device timeline ============ -->
+  <h2 class="sec">One device, one foreground cycle</h2>
+  <p class="seccap">The same ~500-line loader from the dev shell, now on an end user's phone. Loader overhead with zero
+     modules is &lt;50 ms on a mid-range device (H10); modules evaluate lazily on first navigation to their mount.</p>
+
+  <div class="timeline">
+    <div class="tl-row">
+      <span class="t">13:02:11.204</span><span class="nd"><span class="tl-dot c"></span></span>
+      <span class="what">app → foreground <small>manifest refresh trigger (also fires on the 6 h timer)</small></span><span class="ms"></span>
+    </div>
+    <div class="tl-row">
+      <span class="t">+28 ms</span><span class="nd"><span class="tl-dot c"></span></span>
+      <span class="what">GET https://modules.hearth.app/channels/production.json <small>HTTP 200 · CDN HIT · ajv schema valid · cached locally (offline-safe, H9)</small></span>
+      <span class="ms cy">28 ms</span>
+    </div>
+    <div class="tl-row">
+      <span class="t">+29 ms</span><span class="nd"><span class="tl-dot g"></span></span>
+      <span class="what">semver gate (H3) <small>weather-widget ^1.0.0 vs host 1.4.0 <span class="ok">satisfied</span> · pet-tracker <span class="ok">satisfied</span> · incompatible modules would be silently hidden (M4)</small></span>
+      <span class="ms">&lt;1 ms</span>
+    </div>
+    <div class="tl-row">
+      <span class="t">+30 ms</span><span class="nd"><span class="tl-dot g"></span></span>
+      <span class="what">kill flags: none · circuit breaker: 0 strikes <small>mount points render placeholders; nothing evaluated yet (H10)</small></span>
+      <span class="ms">&lt;1 ms</span>
+    </div>
+    <div class="tl-row">
+      <span class="t">13:02:38</span><span class="nd"><span class="tl-dot a"></span></span>
+      <span class="what">first navigation to home → slot:home.cards needs weather-widget <small>artifact 9f2c41d8… not cached → download 41.7 kB</small></span>
+      <span class="ms am">96 ms</span>
+    </div>
+    <div class="tl-row">
+      <span class="t">+96 ms</span><span class="nd"><span class="tl-dot g"></span></span>
+      <span class="what">SHA-256 (expo-crypto) ≡ manifest hash <small>content-addressed: the URL <em>is</em> the hash</small></span>
+      <span class="ms ok">12 ms · ok</span>
+    </div>
+    <div class="tl-row">
+      <span class="t">+108 ms</span><span class="nd"><span class="tl-dot g"></span></span>
+      <span class="what">ed25519 verify (@noble/ed25519) vs pinned pubkey <small>keyId prod-2026-01 — pinned as a constant in the host binary (B4/K6)</small></span>
+      <span class="ms ok">4 ms · ok</span>
+    </div>
+    <div class="tl-row">
+      <span class="t">+112 ms</span><span class="nd"><span class="tl-dot p"></span></span>
+      <span class="what">new Function('globalThis', bundleText)(globalThis) <small>shared Hermes runtime · cache → expo-file-system · externals resolve via __hostRequire__</small></span>
+      <span class="ms">38 ms</span>
+    </div>
+    <div class="tl-row">
+      <span class="t">+150 ms</span><span class="nd"><span class="tl-dot p"></span></span>
+      <span class="what">__registerModule__('weather-widget', register) → register(scopedSdk) <small>scoped SDK: 5 granted groups; Proxy throws descriptively on anything else (R3)</small></span>
+      <span class="ms">2 ms</span>
+    </div>
+    <div class="tl-row">
+      <span class="t">+152 ms</span><span class="nd"><span class="tl-dot g"></span></span>
+      <span class="what">mounted at slot:home.cards inside &lt;ModuleBoundary weather-widget@1.2.0&gt; <small>Sentry breadcrumbs tagged module.id + module.version from here on (H11/P12)</small></span>
+      <span class="ms ok">✓</span>
+    </div>
+  </div>
+
+  <!-- ============ incident ============ -->
+  <h2 class="sec">Incident drill — kill &amp; roll back</h2>
+  <p class="seccap">Two hours after promote, 1.2.0 throws on devices with an empty forecast cache. Walk the drill:
+     containment on-device → <code>modctl kill</code> → <code>modctl rollback</code>. (This exact drill is the Week-3
+     milestone in the B1 roadmap.)</p>
+
+  <div class="stepperbar">
+    <button class="stepbtn on" data-step="1" type="button"><b>1</b> boundary trips</button>
+    <button class="stepbtn" data-step="2" type="button"><b>2</b> modctl kill</button>
+    <button class="stepbtn" data-step="3" type="button"><b>3</b> modctl rollback</button>
+  </div>
+
+  <!-- STEP 1 -->
+  <div class="step-panel on" id="step1">
+    <div>
+      <div class="sentry">
+        <div class="sentry-head">
+          <span class="lvl">ERROR</span>
+          <span class="nm">TypeError: Cannot read property 'hourly' of undefined</span>
+          <span class="cnt">214 events / 30 min · 87 users</span>
+        </div>
+        <div class="sentry-body">
+          <span class="tag">module.id <b>weather-widget</b></span>
+          <span class="tag">module.version <b>1.2.0</b></span>
+          <span class="tag">mechanism <b>ModuleBoundary</b></span>
+          <span class="tag">host <b>2.3.1 (sdk 1.4.0)</b></span>
+          <div class="spark">
+            <i style="height:8%"></i><i style="height:6%"></i><i style="height:10%"></i><i style="height:7%"></i>
+            <i style="height:12%"></i><i style="height:34%"></i><i style="height:58%"></i><i style="height:76%"></i>
+            <i style="height:92%"></i><i style="height:100%"></i>
+          </div>
+          <em>saved Sentry search per module = the MVP “dashboard” (P12) · at ForecastScreen (route:home/weather) ·
+          only devices with empty forecast cache — P5 ran against a warm fixture, gap filed as a smoke-test fixture issue</em>
+        </div>
+      </div>
+      <div class="term">
+        <div class="term-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+          <span class="term-title">affected device — ModuleLoader log</span></div>
+        <div class="term-body"><span class="dimm">level=error</span> <span class="er">event=module.boundary_trip</span> <span class="dimm">module=</span>weather-widget <span class="dimm">version=</span>1.2.0 <span class="dimm">mount=</span>route:home/weather
+<span class="dimm">level=info</span>  <span class="inf">event=module.unmount</span>       <span class="dimm">module=</span>weather-widget <span class="dimm">reason=</span>boundary <span class="dimm">render=</span>host-fallback-screen
+<span class="dimm">level=warn</span>  <span class="wr">event=breaker.strike</span>       <span class="dimm">key=</span>weather-widget@1.2.0 <span class="dimm">count=</span>2/3 <span class="dimm">store=</span>AsyncStorage
+<span class="dimm">level=warn</span>  <span class="wr">event=breaker.note</span>         <span class="dimm">at 3 strikes: locally disabled until a different version appears in the manifest</span>
+<span class="dimm">level=info</span>  <span class="inf">event=sentry.report</span>        <span class="dimm">tags=</span>module.id,module.version <span class="dimm">(H11)</span></div>
+      </div>
+    </div>
+    <div>
+      <div class="phone">
+        <div class="screen">
+          <div class="island"></div>
+          <div class="statusbar"><span>14:36</span><span>⌁ ⛁ ▮▮▮</span></div>
+          <div class="appbody" style="display:flex;flex-direction:column">
+            <div class="navbar"><span>‹ Home</span><span class="ttl">Weather</span></div>
+            <div class="fallback">
+              <div class="icn">!</div>
+              <h4>This feature hit a problem</h4>
+              <p>Weather has been switched off on this device for now.<br>Everything else in Hearth keeps working.</p>
+              <span class="btn">Back to Home</span>
+              <div class="meta">&lt;ModuleBoundary weather-widget@1.2.0&gt;<br>host fallback screen for route mounts · slots render nothing</div>
+            </div>
+          </div>
+          <div class="tabbar">
+            <div class="tab on"><span class="ic">⌂</span>Home</div>
+            <div class="tab"><span class="ic">▤</span>Browse</div>
+            <div class="tab"><span class="ic">⚙</span>Settings</div>
+          </div>
+        </div>
+      </div>
+      <div class="phone-cap"><b>Containment (H5):</b> module throws → unmounted, host keeps running.<br>Routes get a fallback screen; slots render nothing.</div>
+    </div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="step-panel" id="step2">
+    <div>
+      <div class="term">
+        <div class="term-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+          <span class="term-title">owner@mac — zsh — kill switch (P10)</span></div>
+        <div class="term-body"><span class="p">owner@mac ~ %</span> <span class="cmd">modctl kill weather-widget</span> <span class="fl">--channel production</span>
+
+<span class="ok">✔</span> channels/production.json → <span class="er">weather-widget.killed = true</span>
+<span class="ok">✔</span> wrote r2://modules-registry/channels/production.json   <span class="wr">1.4 s</span> <span class="dimm">(direct R2 write — seconds, not a deploy)</span>
+<span class="ok">✔</span> mirrored to registry repo + <span class="cy2">workflow_dispatch</span> logged <span class="dimm">(audit trail)</span>
+<span class="inf">ℹ</span> devices: unmount now if mounted · delete cached artifact · hide mounts
+  <span class="dimm">— effective within one foreground cycle (H6) · verified cache keeps other modules offline-safe (H9)</span>
+
+<span class="p">owner@mac ~ %</span></div>
+      </div>
+      <div class="mdiff">
+        <div class="h">channels/production.json — kill flag</div>
+        <pre><span class="dl">   { "id": "weather-widget", "version": "1.2.0",</span>
+<span class="dl del">-    "entryPoint": "index", "killed": false,</span>
+<span class="dl add">+    "entryPoint": "index", "killed": true,</span>
+<span class="dl">     "requiredSdkVersion": "^1.0.0", …</span></pre>
+      </div>
+      <div class="term">
+        <div class="term-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+          <span class="term-title">end-user device — next foreground refresh</span></div>
+        <div class="term-body"><span class="dimm">level=info</span> <span class="inf">event=manifest.fetch</span>  <span class="dimm">channel=</span>production <span class="dimm">updatedAt=</span>14:52:31Z
+<span class="dimm">level=warn</span> <span class="wr">event=module.killed</span>   <span class="dimm">module=</span>weather-widget <span class="dimm">version=</span>1.2.0 <span class="dimm">action=</span>unmount+purge_cache+hide_mounts
+<span class="dimm">level=info</span> <span class="inf">event=module.mount</span>    <span class="dimm">module=</span>pet-tracker <span class="dimm">unaffected — containment is per-module (G1)</span></div>
+      </div>
+    </div>
+    <div>
+      <div class="phone">
+        <div class="screen">
+          <div class="island"></div>
+          <div class="statusbar"><span>14:53</span><span>⌁ ⛁ ▮▮▮</span></div>
+          <div class="appbody">
+            <div class="apphead">
+              <div class="date">Tue · Jun 9</div>
+              <h3>Hearth</h3>
+            </div>
+            <div class="card">
+              <div class="ct">Pet Tracker</div>
+              <div class="row">
+                <svg width="30" height="30" viewBox="0 0 34 34" fill="#6cb6ff">
+                  <ellipse cx="11" cy="10" rx="3.4" ry="4.4"/><ellipse cx="23" cy="10" rx="3.4" ry="4.4"/>
+                  <ellipse cx="5.5" cy="17" rx="2.8" ry="3.6"/><ellipse cx="28.5" cy="17" rx="2.8" ry="3.6"/>
+                  <path d="M17 15c5 0 9 4.4 9 8.6 0 3.1-2.4 4.9-5 4.4-1.8-.3-2.7-1-4-1s-2.2.7-4 1c-2.6.5-5-1.3-5-4.4C8 19.4 12 15 17 15z"/>
+                </svg>
+                <div class="pettxt"><b>Biscuit</b>walked 32 min today · next meal 17:30</div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="ct">Today</div>
+              <div class="pettxt"><b>3 things planned</b>water plants · standup 11:00 · pick up parcel</div>
+            </div>
+            <div class="toast"><b>●</b> weather-widget killed at 14:52 — card hidden, cached artifact deleted, no app update, no restart</div>
+          </div>
+          <div class="tabbar">
+            <div class="tab on"><span class="ic">⌂</span>Home</div>
+            <div class="tab"><span class="ic">▤</span>Browse</div>
+            <div class="tab"><span class="ic">⚙</span>Settings</div>
+          </div>
+        </div>
+      </div>
+      <div class="phone-cap"><b>Kill (K2/P10):</b> weather card gone from every device on next foreground.<br>The rest of the app — and pet-tracker — untouched.</div>
+    </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="step-panel" id="step3">
+    <div>
+      <div class="term">
+        <div class="term-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+          <span class="term-title">owner@mac — zsh — rollback (P11)</span></div>
+        <div class="term-body"><span class="p">owner@mac ~ %</span> <span class="cmd">modctl rollback weather-widget</span> <span class="fl">--to 1.1.0 --channel production</span>
+
+<span class="ok">✔</span> previous artifact found: <span class="cy2">artifacts/4b7de2a91c6f50e8…d8c1b04e.js</span> <span class="dimm">(immutable · still on R2 · no rebuild — B3)</span>
+<span class="ok">✔</span> signature present + valid for key <span class="wr">prod-2026-01</span>
+<span class="ok">✔</span> channels/production.json → version <span class="ok">1.1.0</span> · killed <span class="ok">false</span>
+<span class="ok">✔</span> wrote r2://modules-registry/channels/production.json   <span class="wr">1.2 s</span>
+<span class="inf">ℹ</span> circuit breaker resets on devices: 1.1.0 is a <span class="dimm">different version than the disabled</span> weather-widget@1.2.0
+<span class="inf">ℹ</span> module data retained, namespaced <span class="dimm">(Q3 default: retain)</span>
+
+<span class="p">owner@mac ~ %</span> <span class="cmd">modctl status weather-widget</span>
+  production  <span class="ok">1.1.0</span> <span class="dimm">(rolled back from 1.2.0 · 14:58Z)</span>   staging  1.2.0 <span class="er">killed</span>   dev  0.1.0–HEAD</div>
+      </div>
+      <div class="mdiff">
+        <div class="h">channels/production.json — rollback = repoint</div>
+        <pre><span class="dl">   { "id": "weather-widget",</span>
+<span class="dl del">-    "version": "1.2.0", "killed": true,</span>
+<span class="dl add">+    "version": "1.1.0", "killed": false,</span>
+<span class="dl del">-    "artifact": { "url": "…/artifacts/9f2c41d8a6b3e07f…d9e0f81a.js", … }</span>
+<span class="dl add">+    "artifact": { "url": "…/artifacts/4b7de2a91c6f50e8…d8c1b04e.js",</span>
+<span class="dl add">+                  "sha256": "4b7de2a91c6f50e8…d8c1b04e",</span>
+<span class="dl add">+                  "signature": "fW2pVk7…Zr5QxT0g==", "keyId": "prod-2026-01" }</span></pre>
+      </div>
+      <div class="term">
+        <div class="term-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+          <span class="term-title">end-user device — next foreground refresh</span></div>
+        <div class="term-body"><span class="dimm">level=info</span> <span class="inf">event=manifest.fetch</span>   <span class="dimm">channel=</span>production <span class="dimm">updatedAt=</span>14:58:44Z
+<span class="dimm">level=info</span> <span class="inf">event=breaker.reset</span>    <span class="dimm">key=</span>weather-widget@1.2.0 <span class="dimm">→ new version 1.1.0 in manifest</span>
+<span class="dimm">level=info</span> <span class="inf">event=artifact.verify</span>  <span class="dimm">sha256=</span><span class="ok">ok</span> <span class="dimm">signature=</span><span class="ok">ok</span> <span class="dimm">keyId=</span>prod-2026-01
+<span class="dimm">level=info</span> <span class="inf">event=module.mount</span>     <span class="dimm">module=</span>weather-widget <span class="dimm">version=</span><span class="ok">1.1.0</span> <span class="dimm">mount=</span>slot:home.cards</div>
+      </div>
+    </div>
+    <div>
+      <div class="phone">
+        <div class="screen">
+          <div class="island"></div>
+          <div class="statusbar"><span>14:59</span><span>⌁ ⛁ ▮▮▮</span></div>
+          <div class="appbody">
+            <div class="apphead">
+              <div class="date">Tue · Jun 9</div>
+              <h3>Hearth</h3>
+            </div>
+            <div class="card weather">
+              <span class="modbadge">weather-widget@1.1.0</span>
+              <div class="ct">Weather · Kraków</div>
+              <div class="row">
+                <svg width="38" height="38" viewBox="0 0 42 42" fill="none">
+                  <circle cx="21" cy="21" r="9" fill="#ffb454"/>
+                  <g stroke="#ffb454" stroke-width="2.4" stroke-linecap="round">
+                    <line x1="21" y1="3" x2="21" y2="8"/><line x1="21" y1="34" x2="21" y2="39"/>
+                    <line x1="3" y1="21" x2="8" y2="21"/><line x1="34" y1="21" x2="39" y2="21"/>
+                    <line x1="8.3" y1="8.3" x2="11.8" y2="11.8"/><line x1="30.2" y1="30.2" x2="33.7" y2="33.7"/>
+                    <line x1="33.7" y1="8.3" x2="30.2" y2="11.8"/><line x1="11.8" y1="30.2" x2="8.3" y2="33.7"/>
+                  </g>
+                </svg>
+                <div class="temp">18°</div>
+                <div class="cond"><b>Partly cloudy</b>1.1.0 — the simpler card,<br>no hourly strip, but stable</div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="ct">Pet Tracker</div>
+              <div class="pettxt"><b>Biscuit</b>walked 32 min today · next meal 17:30</div>
+            </div>
+            <div class="toast"><b>✓</b> rolled back to 1.1.0 at 14:58 — 17 min from Sentry spike to healthy production</div>
+          </div>
+          <div class="tabbar">
+            <div class="tab on"><span class="ic">⌂</span>Home</div>
+            <div class="tab"><span class="ic">▤</span>Browse</div>
+            <div class="tab"><span class="ic">⚙</span>Settings</div>
+          </div>
+        </div>
+      </div>
+      <div class="phone-cap"><b>Rollback (P11/B3):</b> manifest repointed at the previous immutable artifact.<br>Fix lands later as 1.2.1 — through stages 02 → 04 again.</div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <div class="foot-inner">
+    <span>stage 05 of 05 · delivery + operations · B1 Pragmatic MVP</span>
+    <span><a href="04-promotion.html">← 04 · Promotion</a> &nbsp;·&nbsp; <a href="index.html">back to overview ↺</a></span>
+  </div>
+</footer>
+
+<script>
+  const btns = document.querySelectorAll('.stepbtn');
+  btns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      btns.forEach(b => b.classList.remove('on'));
+      btn.classList.add('on');
+      document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('on'));
+      document.getElementById('step' + btn.dataset.step).classList.add('on');
+    });
+  });
+</script>
+
+</body>
+</html>
