@@ -1,7 +1,7 @@
 # SPIKE_PLAN — Modules as EAS Updates, Feasibility Spike
 
 **Companion to:** `IMPL_GENERIC_1_EXPO_NATIVE.md` (long-term architecture / vision doc)
-**Status:** Plan — not started
+**Status:** Executed in full (weeks 1–4) on 2026-06-10 — **GO**; see `~/Work/module-host-spike/GO_NO_GO_MEMO.md`. Week 4 verified the whole chain on a Release-configuration host build (no Metro): EAS OTA load + offline cache + version pickup, Metro patch-split (byte-identical export), polyfill trim (70 KB → 7.4 KB, eval 2 ms). Residual caveats (not mechanisms): TestFlight upload itself, physical mid-tier device timings.
 **Timebox:** 4 weeks, iOS only
 **Decision this spike informs:** go / no-go on building the module framework on Expo machinery (EAS Update branches as registry, eval-loaded JS modules in the shared Hermes runtime).
 
@@ -117,7 +117,7 @@ What the spike's in-app client must implement, with repo references. Authoritati
 **Request** (easy — copy header set from `ios/EXUpdates/AppLoader/FileDownloader.swift:454-476`):
 `Accept: multipart/mixed,application/expo+json,application/json` · `Expo-Protocol-Version: 1` · `Expo-API-Version: 1` · `Expo-Platform: ios` · `Expo-Runtime-Version: host-sdk@1` (arbitrary strings are fine; matching is exact-string, server-side) · `Expo-Channel-Name: <branch channel>` · `Expo-Updates-Environment: BARE` · `EAS-Client-ID: <uuid>`.
 
-**Response** (medium): `multipart/mixed; boundary=…` with parts named `manifest`, optional `directive`, `extensions`, `certificate_chain`; `204` means no update. No JS multipart parser exists in the repo — write one (~170 LOC equivalent; algorithm in `UpdatesMultipartStreamReader.swift`).
+**Response** (medium): `multipart/mixed; boundary=…` with parts named `manifest`, optional `directive`, `extensions`, `certificate_chain`; `204` means no update. No JS multipart parser exists in the repo — write one (~170 LOC equivalent; algorithm in `UpdatesMultipartStreamReader.swift`). ⚠️ **Spike finding: `extensions` is not optional for EAS** — it carries `assetRequestHeaders[assetKey].authorization` (`EAS-HMAC-SHA256 …`), and `assets.eascdn.net` returns 403 to asset downloads without that header.
 
 **Manifest** (easy): `{ id, createdAt, runtimeVersion, launchAsset, assets[], metadata, extra }`; module manifest rides in `extra.expoClient.extra` (from the module's app.json `extra`). Each asset: `{ url, key, hash, contentType, fileExtension }`.
 
